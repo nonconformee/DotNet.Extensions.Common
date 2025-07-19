@@ -2,7 +2,7 @@
 namespace nonconformee.DotNet.Extensions.Collections;
 
 /// <summary>
-/// Provides extension methods for <see cref="Stack{T}" />.
+/// Provides extension methods for <see cref="Queue{T}" />.
 /// </summary>
 public static class QueueExtensions
 {

@@ -87,7 +87,7 @@ public static class StackExtensions
     {
         if (item != null)
         {
-            stack.Enqueue(item);
+            stack.Push(item);
             return true;
         }
 
