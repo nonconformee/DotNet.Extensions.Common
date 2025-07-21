@@ -3,7 +3,7 @@ namespace nonconformee.DotNet.Extensions.Exceptions;
 
 public static class ParameterValidationHelpers
 {
-    public static void ThrowIfIndexOutOfRange<T> (this ICollection<T> collection, int index, int? count = null)
+    public static void ThrowIfIndexArgumentIsOutOfRange<T> (this ICollection<T> collection, int index, int? count = null)
     {
         if (index < 0 || index >= collection.Count)
         {

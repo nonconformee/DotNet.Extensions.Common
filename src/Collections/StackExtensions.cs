@@ -12,16 +12,16 @@ public static class StackExtensions
     /// <typeparam name="T">The type of elements in the stack.</typeparam>
     /// <param name="stack"> The stack to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items"> The items to add to the stack. Cannot be <see langword="null"/>.</param>
-    /// <returns>The original stack for further processing.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
-    public static Stack<T> PushMulti<T>(this Stack<T> stack, IEnumerable<T> items)
+    public static void PushRange<T>(this Stack<T> stack, IEnumerable<T> items)
     {
+        if (stack is null) throw new ArgumentNullException(nameof(stack));
+        if (items is null) throw new ArgumentNullException(nameof(items));
+
         foreach (var item in items)
         {
             stack.Push(item);
         }
-
-        return stack;
     }
 
     /// <summary>
@@ -30,17 +30,9 @@ public static class StackExtensions
     /// <typeparam name="T">The type of elements in the stack.</typeparam>
     /// <param name="stack"> The stack to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items"> The items to add to the stack. Cannot be <see langword="null"/>.</param>
-    /// <returns>The original stack for further processing.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
-    public static Stack<T> PushMulti<T>(this Stack<T> stack, params T[] items)
-    {
-        foreach (var item in items)
-        {
-            stack.Push(item);
-        }
-
-        return stack;
-    }
+    public static void PushRange<T>(this Stack<T> stack, params T[] items)
+        => stack.PushRange((IEnumerable<T>)items);
 
     /// <summary>
     /// Pops all items from the stack.
@@ -51,6 +43,8 @@ public static class StackExtensions
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
     public static List<T> PopAll<T>(this Stack<T> stack)
     {
+        if (stack is null) throw new ArgumentNullException(nameof(stack));
+
         var items = new List<T>(stack.Count);
 
         while (stack.Count > 0)
@@ -59,20 +53,6 @@ public static class StackExtensions
         }
 
         return items;
-    }
-
-    /// <summary>
-    /// Empties the stack.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the stack.</typeparam>
-    /// <param name="stack">The stack of elements to empty. Cannot be <see langword="null"/>.</param>
-    /// <returns>The original stack for further processing.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
-    /// <remarks><see cref="Empty{T}(Stack{T})"/> exists to clear the stack and allows further processing by returning its instance (e.g. in fluent chaining of queue operations).</remarks>
-    public static Stack<T> Empty<T>(this Stack<T> stack)
-    {
-        stack.Clear();
-        return stack;
     }
 
     /// <summary>
@@ -85,6 +65,8 @@ public static class StackExtensions
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
     public static bool PushIfNotNull<T>(this Stack<T> stack, T item)
     {
+        if (stack is null) throw new ArgumentNullException(nameof(stack));
+
         if (item != null)
         {
             stack.Push(item);
@@ -104,9 +86,11 @@ public static class StackExtensions
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
     public static bool PushIfNotEmpty<T>(this Stack<T> stack, IEnumerable<T> items)
     {
+        if (stack is null) throw new ArgumentNullException(nameof(stack));
+
         if (items != null && items.Any())
         {
-            stack.PushMulti(items);
+            stack.PushRange(items);
             return true;
         }
 
@@ -122,6 +106,8 @@ public static class StackExtensions
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
     public static T? PopOrDefault<T>(this Stack<T> stack)
     {
+        if (stack is null) throw new ArgumentNullException(nameof(stack));
+
         return stack.Count > 0 ? stack.Pop() : default;
     }
 
@@ -134,6 +120,8 @@ public static class StackExtensions
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
     public static T? PeekOrDefault<T>(this Stack<T> stack)
     {
+        if (stack is null) throw new ArgumentNullException(nameof(stack));
+
         return stack.Count > 0 ? stack.Peek() : default;
     }
 }

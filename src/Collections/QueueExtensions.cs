@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+
 namespace nonconformee.DotNet.Extensions.Collections;
 
 /// <summary>
@@ -12,16 +14,16 @@ public static class QueueExtensions
     /// <typeparam name="T">The type of elements in the queue.</typeparam>
     /// <param name="queue"> The queue to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items"> The items to add to the queue. Cannot be <see langword="null"/>.</param>
-    /// <returns>The original queue for further processing.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
-    public static Queue<T> EnqueueMulti<T>(this Queue<T> queue, IEnumerable<T> items)
+    public static void EnqueueRange<T>(this Queue<T> queue, IEnumerable<T> items)
     {
+        if (queue is null) throw new ArgumentNullException(nameof(queue));
+        if (items is null) throw new ArgumentNullException(nameof(items));
+        
         foreach (var item in items)
         {
             queue.Enqueue(item);
         }
-
-        return queue;
     }
 
     /// <summary>
@@ -30,17 +32,9 @@ public static class QueueExtensions
     /// <typeparam name="T">The type of elements in the queue.</typeparam>
     /// <param name="queue"> The queue to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items"> The items to add to the queue. Cannot be <see langword="null"/>.</param>
-    /// <returns>The original queue for further processing.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
-    public static Queue<T> EnqueueMulti<T>(this Queue<T> queue, params T[] items)
-    {
-        foreach (var item in items)
-        {
-            queue.Enqueue(item);
-        }
-
-        return queue;
-    }
+    public static void EnqueueRange<T>(this Queue<T> queue, params T[] items)
+        => queue.EnqueueRange((IEnumerable<T>)items);
 
     /// <summary>
     /// Dequeues all items from the queue.
@@ -51,6 +45,8 @@ public static class QueueExtensions
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
     public static List<T> DequeueAll<T>(this Queue<T> queue)
     {
+        if (queue is null) throw new ArgumentNullException(nameof(queue));
+
         var items = new List<T>(queue.Count);
 
         while (queue.Count > 0)
@@ -59,20 +55,6 @@ public static class QueueExtensions
         }
 
         return items;
-    }
-
-    /// <summary>
-    /// Empties the queue.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the queue.</typeparam>
-    /// <param name="queue">The queue of elements to empty. Cannot be <see langword="null"/>.</param>
-    /// <returns>The original queue for further processing.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
-    /// <remarks><see cref="Empty{T}(Queue{T})"/> exists to clear the queue and allows further processing by returning its instance (e.g. in fluent chaining of queue operations).</remarks>
-    public static Queue<T> Empty<T>(this Queue<T> queue)
-    {
-        queue.Clear();
-        return queue;
     }
 
     /// <summary>
@@ -85,6 +67,8 @@ public static class QueueExtensions
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
     public static bool EnqueueIfNotNull<T>(this Queue<T> queue, T item)
     {
+        if (queue is null) throw new ArgumentNullException(nameof(queue));
+
         if (item != null)
         {
             queue.Enqueue(item);
@@ -104,9 +88,11 @@ public static class QueueExtensions
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
     public static bool EnqueueIfNotEmpty<T>(this Queue<T> queue, IEnumerable<T> items)
     {
+        if (queue is null) throw new ArgumentNullException(nameof(queue));
+
         if (items != null && items.Any())
         {
-            queue.EnqueueMulti(items);
+            queue.EnqueueRange(items);
             return true;
         }
 
@@ -122,6 +108,8 @@ public static class QueueExtensions
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
     public static T? DequeueOrDefault<T>(this Queue<T> queue)
     {
+        if (queue is null) throw new ArgumentNullException(nameof(queue));
+
         return queue.Count > 0 ? queue.Dequeue() : default;
     }
 
@@ -134,6 +122,8 @@ public static class QueueExtensions
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
     public static T? PeekOrDefault<T>(this Queue<T> queue)
     {
+        if (queue is null) throw new ArgumentNullException(nameof(queue));
+
         return queue.Count > 0 ? queue.Peek() : default;
     }
 }

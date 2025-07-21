@@ -19,6 +19,9 @@ public static class SetExtensions
     /// <exception cref="ArgumentNullException"><paramref name="set"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static bool AddRange<T>(this ISet<T> set, IEnumerable<T> items)
     {
+        if (set is null) throw new ArgumentNullException(nameof(set));
+        if (items is null) throw new ArgumentNullException(nameof(items));
+
         bool added = false;
         
         foreach (var item in items)
@@ -38,14 +41,5 @@ public static class SetExtensions
     /// <returns><see langword="true"/> if at least one item of <paramref name="items"/> was added to the set, <see langword="false"/> otherwise.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="set"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static bool AddRange<T>(this ISet<T> set, params T[] items)
-    {
-        bool added = false;
-
-        foreach (var item in items)
-        {
-            added |= set.Add(item);
-        }
-
-        return added;
-    }
+        => set.AddRange((IEnumerable<T>)items);
 }
