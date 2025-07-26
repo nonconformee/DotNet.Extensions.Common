@@ -5,7 +5,7 @@ public static class ExceptionExtensions
 {
     public static string GetFullMessage(this Exception exception)
     {
-        if (exception == null)
+        if (exception is null)
         {
             throw new ArgumentNullException(nameof(exception), "Exception cannot be null.");
         }
@@ -21,7 +21,7 @@ public static class ExceptionExtensions
 
     public static string GetFullStackTrace(this Exception exception)
     {
-        if (exception == null)
+        if (exception is null)
         {
             throw new ArgumentNullException(nameof(exception), "Exception cannot be null.");
         }
@@ -37,7 +37,7 @@ public static class ExceptionExtensions
 
     public static string GetFullDetails(this Exception exception)
     {
-        if (exception == null)
+        if (exception is null)
         {
             throw new ArgumentNullException(nameof(exception), "Exception cannot be null.");
         }

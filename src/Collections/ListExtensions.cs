@@ -61,6 +61,27 @@ public static class ListExtensions
     }
 
     /// <summary>
+    /// Reverses the order of elements in the list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list whose elements will be reversed. Cannot be <see langword="null"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static void Reverse<T>(this IList<T> list)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        int left = 0;
+        int right = list.Count - 1;
+
+        while (left < right)
+        {
+            (list[left], list[right]) = (list[right], list[left]);
+            left++;
+            right--;
+        }
+    }
+
+    /// <summary>
     /// Shuffles the elements of a list in place using Fisher-Yates algorithm.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
@@ -69,7 +90,7 @@ public static class ListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
     public static void Shuffle<T>(this IList<T> list, Random? rng = null)
     {
-        if (list == null) throw new ArgumentNullException(nameof(list));
+        if (list is null) throw new ArgumentNullException(nameof(list));
 
         rng ??= new Random();
         int n = list.Count;
@@ -91,7 +112,7 @@ public static class ListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
     public static T? PickRandom<T>(this IList<T> list, Random? randomizer = null)
     {
-        if (list == null) throw new ArgumentNullException(nameof(list));
+        if (list is null) throw new ArgumentNullException(nameof(list));
 
         if (list.Count == 0)
         {
@@ -99,6 +120,31 @@ public static class ListExtensions
         }
 
         var index = (randomizer ?? new Random()).Next(0, list.Count);
+
+        return list[index];
+    }
+
+    /// <summary>
+    /// Picks a random item from the list and removes it.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list to pick a random item from. Cannot be <see langword="null"/>.</param>
+    /// <param name="randomizer">The used randomizer. Can be <see langword="null"/> in which case a new instance of <see cref="Random"/> is used.</param>
+    /// <returns>The randomly picked item or <see langword="null"/> if the list empty.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static T? PickRandomAndRemove<T>(this IList<T> list, Random? randomizer = null)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        if (list.Count == 0)
+        {
+            return default(T?);
+        }
+
+        var index = (randomizer ?? new Random()).Next(0, list.Count);
+        var value = list[index];
+
+        list.RemoveAt(index);
 
         return list[index];
     }

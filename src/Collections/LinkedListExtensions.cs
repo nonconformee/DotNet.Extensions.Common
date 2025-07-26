@@ -16,9 +16,9 @@ public static class LinkedListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/>, <paramref name="node"/>, or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static void AddAfterRange<T>(this LinkedList<T> list, LinkedListNode<T> node, IEnumerable<T> items)
     {
-        if (list == null) throw new ArgumentNullException(nameof(list));
-        if (node == null) throw new ArgumentNullException(nameof(node));
-        if (items == null) throw new ArgumentNullException(nameof(items));
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (node is null) throw new ArgumentNullException(nameof(node));
+        if (items is null) throw new ArgumentNullException(nameof(items));
 
         LinkedListNode<T> current = node;
 
@@ -49,9 +49,9 @@ public static class LinkedListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/>, <paramref name="node"/>, or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static void AddBeforeRange<T>(this LinkedList<T> list, LinkedListNode<T> node, IEnumerable<T> items)
     {
-        if (list == null) throw new ArgumentNullException(nameof(list));
-        if (node == null) throw new ArgumentNullException(nameof(node));
-        if (items == null) throw new ArgumentNullException(nameof(items));
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (node is null) throw new ArgumentNullException(nameof(node));
+        if (items is null) throw new ArgumentNullException(nameof(items));
 
         var stack = new Stack<T>();
 
@@ -86,8 +86,8 @@ public static class LinkedListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static void AddFirstRange<T>(this LinkedList<T> list, IEnumerable<T> items)
     {
-        if (list == null) throw new ArgumentNullException(nameof(list));
-        if (items == null) throw new ArgumentNullException(nameof(items));
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (items is null) throw new ArgumentNullException(nameof(items));
 
         var stack = new Stack<T>();
 
@@ -121,8 +121,8 @@ public static class LinkedListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static void AddLastRange<T>(this LinkedList<T> list, IEnumerable<T> items)
     {
-        if (list == null) throw new ArgumentNullException(nameof(list));
-        if (items == null) throw new ArgumentNullException(nameof(items));
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (items is null) throw new ArgumentNullException(nameof(items));
 
         foreach (var item in items)
         {

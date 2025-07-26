@@ -101,4 +101,31 @@ public static class DictionaryExtensions
 
         return dictionary.TryGetValue(key, out var value) ? value : default;
     }
+
+    /// <summary>
+    /// Adds a key-value pair to the dictionary if the key does not exist, or updates the value for the key if it already exists.
+    /// </summary>
+    /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to modify. Cannot be <see langword="null"/>.</param>
+    /// <param name="key">The key to add or update. Cannot be <see langword="null"/>.</param>
+    /// <param name="value">The value to associate with the key.</param>
+    /// <returns>The value that was added or updated in the dictionary.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="key"/> is <see langword="null"/>.</exception>
+    public static TValue SetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+    {
+        if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
+        if (key is null) throw new ArgumentNullException(nameof(key));
+        
+        if (dictionary.ContainsKey(key))
+        {
+            dictionary[key] = value;
+        }
+        else
+        {
+            dictionary.Add(key, value);
+        }
+        
+        return value;
+    }
 }

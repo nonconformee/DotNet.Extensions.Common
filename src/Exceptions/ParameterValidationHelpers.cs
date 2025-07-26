@@ -15,4 +15,12 @@ public static class ParameterValidationHelpers
             throw new ArgumentOutOfRangeException(nameof(count), $"Count {count.Value} exceeds the collection size {collection.Count} from index {index}.");
         }
     }
+
+    public static void ThrowIfArgumentIsOutOfRange (this int value, int min, int max)
+    {
+        if(value < min || value > max)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), $"Value {value} is out of range. It must be between {min} and {max}.");
+        }
+    }
 }

@@ -146,8 +146,8 @@ public static class CollectionExtensions
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     public static int RemoveWhere<T>(this ICollection<T> collection, Func<T, bool> predicate)
     {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
-        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+        if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
         var itemsToRemove = collection.Where(predicate).ToList();
 
@@ -165,8 +165,8 @@ public static class CollectionExtensions
     /// <typeparam name="T">The type of elements in the collection. Can be <see langword="null"/>.</typeparam>
     /// <param name="collection">The collection to test.</param>
     /// <returns><see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.</returns>
-    public static bool IsNullIfNullOrEmpty<T>(this ICollection<T> collection)
-        => (collection == null || collection.Count == 0);
+    public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
+        => (collection is null || collection.Count == 0);
 
     /// <summary>
     /// Returns <see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection.
@@ -175,7 +175,7 @@ public static class CollectionExtensions
     /// <param name="collection">The collection to test.</param>
     /// <returns><see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
     public static ICollection<T>? ToNullIfNullOrEmpty<T>(this ICollection<T> collection)
-        => (collection == null || collection.Count == 0) ? null : collection;
+        => (collection is null || collection.Count == 0) ? null : collection;
 
     /// <summary>
     /// Adds a sequence of items if it is not <see langword="null"/> and contains elements.
@@ -188,9 +188,9 @@ public static class CollectionExtensions
     /// <remarks>Items which are <see langword="null"/> itself will also not be added.</remarks>
     public static int AddIfNotNullOrEmpty<T>(this ICollection<T> collection, IEnumerable<T> items)
     {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
 
-        if (items == null)
+        if (items is null)
         {
             return 0;
         }
@@ -206,7 +206,7 @@ public static class CollectionExtensions
 
         foreach (var item in enumeratedItems)
         {
-            if(item == null)
+            if(item is null)
             {
                 continue;
             }
@@ -245,9 +245,9 @@ public static class CollectionExtensions
     /// </remarks>
     public static int AddFlattened<T>(this ICollection<T> collection, object items)
     {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
 
-        if (items == null)
+        if (items is null)
         {
             return 0;
         }
@@ -302,7 +302,7 @@ public static class CollectionExtensions
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     public static T? PickRandom<T>(this ICollection<T> collection, Random? randomizer = null)
     {
-        if (collection == null) throw new ArgumentNullException(nameof(collection));
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
 
         if(collection.Count == 0)
         {
@@ -312,5 +312,33 @@ public static class CollectionExtensions
         var index = (randomizer ?? new Random()).Next(0, collection.Count);
 
         return collection.Skip(index).FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Picks a random item from the collection and removes it.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to pick a random item from. Cannot be <see langword="null"/>.</param>
+    /// <param name="randomizer">The used randomizer. Can be <see langword="null"/> in which case a new instance of <see cref="Random"/> is used.</param>
+    /// <returns>The randomly picked item or <see langword="null"/> if the collection empty.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    public static T? PickRandomAndRemove<T>(this ICollection<T> collection, Random? randomizer = null)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+
+        if (collection.Count == 0)
+        {
+            return default(T?);
+        }
+
+        var index = (randomizer ?? new Random()).Next(0, collection.Count);
+        var value = collection.Skip(index).FirstOrDefault();
+
+        if(value is not null)
+        {
+            collection.Remove(value);
+        }
+
+        return value;
     }
 }

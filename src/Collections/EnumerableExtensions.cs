@@ -1,6 +1,6 @@
 ﻿
-using System;
-using System.Collections.Generic;
+using nonconformee.DotNet.Extensions.Exceptions;
+using nonconformee.DotNet.Extensions.Randomizing;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
@@ -9,6 +9,15 @@ namespace nonconformee.DotNet.Extensions.Collections;
 /// </summary>
 public static class EnumerableExtensions
 {
+    /// <summary>
+    /// Ensures that a sequence is never <see langword="null"/> by returning an empty sequence if the input is <see langword="null"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="sequence">The sequence to check for <see langword="null"/>. Can be <see langword="null"/>.</param>
+    /// <returns>The original sequence if it is not <see langword="null"/>; otherwise, an empty sequence of type <typeparamref name="T"/>.</returns>
+    public static IEnumerable<T> ToEmptyIfNull<T>(this IEnumerable<T>? sequence)
+        => sequence is null ? Enumerable.Empty<T>() : sequence;
+
     /// <summary>
     /// Performs the specified action on each element of the sequence.
     /// </summary>
@@ -135,4 +144,109 @@ public static class EnumerableExtensions
     /// <remarks><paramref name="items"/> will be fully enumerated before the first element of <paramref name="sequence"/> is yielded.</remarks>
     public static IEnumerable<T> Exclude<T>(this IEnumerable<T> sequence, params T[] items)
         => sequence.Exclude((IEnumerable<T>)items);
+
+    /// <summary>
+    /// Combines two sequences into a single sequence by interleaving their elements in random order.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequences.</typeparam>
+    /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
+    /// <param name="random">An optional <see cref="Random"/> instance used to determine the interleaving order. If <see langword="null"/>, a new instance of <see cref="Random"/> is created.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that yields elements from both <paramref name="sequence"/> and  <paramref name="items"/> in random order until both sequences are fully enumerated.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> Mix<T>(this IEnumerable<T> sequence, IEnumerable<T> items, Random? random = null)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+        if (items is null) throw new ArgumentNullException(nameof(items));
+
+        random ??= new Random();
+
+        using var enum1 = sequence.GetEnumerator();
+        using var enum2 = items.GetEnumerator();
+
+        var enum1Done = false;
+        var enum2Done = false;
+
+        while (true)
+        {
+            if(enum1Done && enum2Done)
+            {
+                yield break;
+            }
+
+            var chance = random.NextChance(0.5);
+            var useEnum1 = !enum1Done && (enum2Done || chance);
+            var useEnum2 = !enum2Done && (enum1Done || chance);
+
+            if (useEnum1)
+            {
+                if(enum1.MoveNext())
+                {
+                    yield return enum1.Current;
+                }
+                else
+                {
+                    enum1Done = true;
+                }
+
+                continue;
+            }
+
+            if (useEnum2)
+            {
+                if(enum2.MoveNext())
+                {
+                    yield return enum2.Current;
+                }
+                else
+                {
+                    enum2Done = true;
+                }
+
+                continue;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Combines two sequences into a single sequence by interleaving their elements in random order.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequences.</typeparam>
+    /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
+    /// <param name="random">An optional <see cref="Random"/> instance used to determine the interleaving order. If <see langword="null"/>, a new instance of <see cref="Random"/> is created.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that yields elements from both <paramref name="sequence"/> and  <paramref name="items"/> in random order until both sequences are fully enumerated.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> Mix<T>(this IEnumerable<T> sequence, params T[] items)
+        => sequence.Mix((IEnumerable<T>)items);
+
+    /// <summary>
+    /// Divides a sequence into smaller batches of a specified size.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="sequence">The sequence to be divided into batches. Cannot be <see langword="null"/>.</param>
+    /// <param name="batchSize">The maximum number of elements in each batch. Must be greater than 0.</param>
+    /// <returns>An enumerable of batches, where each batch is an <see cref="IEnumerable{T}"/> containing up to <paramref name="batchSize"/> elements.
+    /// The last batch may contain fewer elements if the total number of elements in the sequence is not evenly divisible by <paramref name="batchSize"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="batchSize"/> is 0 or less.</exception>
+    public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> sequence, int batchSize)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+        batchSize.ThrowIfArgumentIsOutOfRange(1, int.MaxValue);
+
+        using var enumerator = sequence.GetEnumerator();
+        var batch = new List<T>(batchSize);
+
+        while (enumerator.MoveNext())
+        {
+            batch.Add(enumerator.Current);
+
+            if(batch.Count >= batchSize)
+            {
+                yield return batch.ToList();
+                batch.Clear();
+            }
+        }
+    }
 }
