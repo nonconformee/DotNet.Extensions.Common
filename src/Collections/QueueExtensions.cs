@@ -1,6 +1,4 @@
 ﻿
-using System.Collections.Generic;
-
 namespace nonconformee.DotNet.Extensions.Collections;
 
 /// <summary>

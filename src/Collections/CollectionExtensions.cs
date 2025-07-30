@@ -9,6 +9,33 @@ namespace nonconformee.DotNet.Extensions.Collections;
 public static class CollectionExtensions
 {
     /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection. Can be <see langword="null"/>.</typeparam>
+    /// <param name="collection">The collection to test.</param>
+    /// <returns><see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.</returns>
+    public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
+        => (collection is null || collection.Count == 0);
+
+    /// <summary>
+    /// Returns <see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to test.</param>
+    /// <returns><see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
+    public static ICollection<T>? ToNullIfNullOrEmpty<T>(this ICollection<T> collection)
+        => (collection is null || collection.Count == 0) ? null : collection;
+
+    /// <summary>
+    /// Returns an empty collection if <paramref name="collection"/> is <see langword="null"/> or an empty collection.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to test.</param>
+    /// <returns>An empty collection if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
+    public static ICollection<T> ToEmptyIfNullOrEmpty<T>(this ICollection<T>? collection)
+        => collection ?? new List<T>();
+
+    /// <summary>
     /// Adds multiple items to the collection.
     /// </summary>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
@@ -142,9 +169,9 @@ public static class CollectionExtensions
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection"> The collection from which elements will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="predicate">The predicate to match elements for removal. Cannot be <see langword="null"/>.</param>
-    /// <returns>The number of elements removed.</returns>
+    /// <returns>The list of removed elements.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
-    public static int RemoveWhere<T>(this ICollection<T> collection, Func<T, bool> predicate)
+    public static List<T> RemoveWhere<T>(this ICollection<T> collection, Func<T, bool> predicate)
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
         if (predicate is null) throw new ArgumentNullException(nameof(predicate));
@@ -156,37 +183,41 @@ public static class CollectionExtensions
             collection.Remove(item);
         }
 
-        return itemsToRemove.Count;
+        return itemsToRemove;
     }
 
     /// <summary>
-    /// Returns <see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.
+    /// Adds an item to the collection if the item is not <see langword="null"/>.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the collection. Can be <see langword="null"/>.</typeparam>
-    /// <param name="collection">The collection to test.</param>
-    /// <returns><see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.</returns>
-    public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
-        => (collection is null || collection.Count == 0);
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
+    /// <param name="item">The item to test and add. Can be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the item was not <see langword="null"/> and therefore added to the collection, <see langword="false"/> otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    public static bool AddIfNotNullOrEmpty<T>(this ICollection<T> collection, T? item)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        collection.Add(item);
+
+        return true;
+    }
 
     /// <summary>
-    /// Returns <see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the collection. Can be <see langword="null"/>.</typeparam>
-    /// <param name="collection">The collection to test.</param>
-    /// <returns><see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
-    public static ICollection<T>? ToNullIfNullOrEmpty<T>(this ICollection<T> collection)
-        => (collection is null || collection.Count == 0) ? null : collection;
-
-    /// <summary>
-    /// Adds a sequence of items if it is not <see langword="null"/> and contains elements.
+    /// Adds a sequence of items to the collection if the sequence is not <see langword="null"/> and contains elements.
     /// </summary>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence to test and add. Can be <see langword="null"/>.</param>
     /// <returns>The number of items added. Could be zero.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    /// <remarks>Items which are <see langword="null"/> itself will also not be added.</remarks>
-    public static int AddIfNotNullOrEmpty<T>(this ICollection<T> collection, IEnumerable<T> items)
+    /// <remarks>Items in <paramref name="items"/> which are <see langword="null"/> itself will also not be added.</remarks>
+    public static int AddIfNotNullOrEmptyRange<T>(this ICollection<T> collection, IEnumerable<T> items)
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
 
@@ -219,15 +250,15 @@ public static class CollectionExtensions
     }
 
     /// <summary>
-    /// Adds a sequence of items if it is not <see langword="null"/> and contains elements.
+    /// Adds a sequence of items to the collection if the sequence is not <see langword="null"/> and contains elements.
     /// </summary>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence to test and add. Can be <see langword="null"/>.</param>
     /// <returns>The number of items added. Could be zero.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/>vis <see langword="null"/>.</exception>
-    /// <remarks>Items which are <see langword="null"/> itself will also not be added.</remarks>
-    public static int AddIfNotNullOrEmpty<T>(this ICollection<T> collection, params T[] items)
+    /// <remarks>Items in <paramref name="items"/> which are <see langword="null"/> itself will also not be added.</remarks>
+    public static int AddIfNotNullOrEmptyRange<T>(this ICollection<T> collection, params T[] items)
         => collection.AddIfNotNullOrEmpty<T>((IEnumerable<T>) items);
 
     /// <summary>
@@ -259,7 +290,7 @@ public static class CollectionExtensions
         }
         else if(items is IEnumerable<T> enumerable1)
         {
-            return collection.AddIfNotNullOrEmpty(enumerable1);
+            return collection.AddIfNotNullOrEmptyRange(enumerable1);
         }
         else if(items is IEnumerable enumerable2)
         {
@@ -272,8 +303,10 @@ public static class CollectionExtensions
 
             return added;
         }
-
-        return 0;
+        else
+        {
+            throw new ArgumentException($"The provided items of type {items.GetType()} cannot be added to the collection.", nameof(items));
+        }
     }
 
     /// <summary>

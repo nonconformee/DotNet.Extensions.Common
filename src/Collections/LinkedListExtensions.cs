@@ -7,6 +7,43 @@ namespace nonconformee.DotNet.Extensions.Collections;
 public static class LinkedListExtensions
 {
     /// <summary>
+    /// Iterates through each node in the linked list and performs the specified action on it.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to iterate through. Cannot be <see langword="null"/>.</param>
+    /// <param name="action">The action to perform on each node. Cannot be <see langword="null"/>.</param>
+    /// <returns>The total number of nodes in the linked list.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/> or if <paramref name="action"/> is <see langword="null"/>.</exception>
+    public static int ForEachNode<T>(this LinkedList<T> list, Action<LinkedListNode<T>> action)
+        => ForEachNode(list, (node, _) => action(node));
+
+    /// <summary>
+    /// Iterates through each node in the linked list and performs the specified action on it.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to iterate through. Cannot be <see langword="null"/>.</param>
+    /// <param name="action">The action to perform on each node. The action receives the nodes and their zero-based index. Cannot be <see langword="null"/>.</param>
+    /// <returns>The total number of nodes in the linked list.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/> or if <paramref name="action"/> is <see langword="null"/>.</exception>
+    public static int ForEachNode<T>(this LinkedList<T> list, Action<LinkedListNode<T>, int> action)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (action is null) throw new ArgumentNullException(nameof(action));
+        
+        var node = list.First;
+        var index = 0;
+
+        while(node != null)
+        {
+            action(node, index);
+            node = node.Next;
+            index++;
+        }
+
+        return index;
+    }
+
+    /// <summary>
     /// Adds a range of elements after the specified node in the linked list.
     /// </summary>
     /// <typeparam name="T">The type of elements in the linked list.</typeparam>

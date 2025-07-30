@@ -14,15 +14,20 @@ public static class DictionaryExtensions
     /// <param name="dictionary">The dictionary of elements to iterate over. Cannot be <see langword="null"/>.</param>
     /// <param name="action">The action to perform on each element. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
-    public static void ForEach<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, Action<TKey, TValue> action)
+    public static int ForEachPair<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, Action<TKey, TValue> action)
     {
         if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
         if (action is null) throw new ArgumentNullException(nameof(action));
 
+        var index = 0;
+
         foreach (var element in dictionary)
         {
             action(element.Key, element.Value);
+            index++;
         }
+
+        return index;
     }
 
     /// <summary>
