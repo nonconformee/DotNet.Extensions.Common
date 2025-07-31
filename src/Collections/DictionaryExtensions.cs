@@ -133,4 +133,85 @@ public static class DictionaryExtensions
         
         return value;
     }
+
+    /// <summary>
+    /// Retrieves the key associated with the specified value in the dictionary.
+    /// </summary>
+    /// <remarks>If multiple keys in the dictionary are associated with the specified value, the first key
+    /// encountered is returned.</remarks>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to search for the specified value. Cannot be <see langword="null"/>.</param>
+    /// <param name="value">The value to locate in the dictionary.</param>
+    /// <param name="equalityComparer">An optional equality comparer to use for comparing values. If <see langword="null"/>, the default equality
+    /// comparer for <typeparamref name="TValue"/> is used.</param>
+    /// <returns>The key associated with the specified value if found; otherwise, the default value of <typeparamref
+    /// name="TKey"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is <see langword="null"/>.</exception>
+    public static TKey? GetKeyForValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TValue value, IEqualityComparer<TValue>? equalityComparer = null)
+    {
+        if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
+
+        equalityComparer ??= EqualityComparer<TValue>.Default;
+
+        foreach (var pair in dictionary)
+        {
+            if (equalityComparer.Equals(pair.Value, value))
+            {
+                return pair.Key;
+            }
+        }
+
+        return default;
+    }
+
+    /// <summary>
+    /// Adds a new entry to the dictionary if the specified key does not already exist.
+    /// </summary>
+    /// <remarks>This method checks whether the specified <paramref name="key"/> exists in the <paramref
+    /// name="dictionary"/>. If the key does not exist, it creates a new instance of the specified <paramref
+    /// name="type"/> and adds it to the dictionary with the given key. The method uses <see
+    /// cref="Activator.CreateInstance(Type)"/> to create the value, so the specified type must have a parameterless
+    /// constructor.</remarks>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to which the entry will be added.</param>
+    /// <param name="key">The key to check for existence in the dictionary.</param>
+    /// <param name="type">The type of the value to create and add to the dictionary if the key does not exist. This type must have a
+    /// parameterless constructor.</param>
+    /// <returns><see langword="true"/> if a new entry was added to the dictionary, <see langword="false"/> otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="type"/> is <see
+    /// langword="null"/>.</exception>
+    public static bool AddIfNecessary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Type type)
+    {
+        if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
+        if (key is null) throw new ArgumentNullException(nameof(key));
+        if (type is null) throw new ArgumentNullException(nameof(type));
+
+        if (!dictionary.ContainsKey(key))
+        {
+            dictionary.Add(key, (TValue)Activator.CreateInstance(type)!);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Adds a new entry to the dictionary if the specified key does not already exist.
+    /// </summary>
+    /// <remarks>This method checks whether the specified <paramref name="key"/> exists in the <paramref
+    /// name="dictionary"/>. If the key does not exist, it creates a new instance of the specified <typeparamref name="TValue"/> 
+    /// and adds it to the dictionary with the given key. The method uses <see
+    /// cref="Activator.CreateInstance(Type)"/> to create the value, so the specified type must have a parameterless
+    /// constructor.</remarks>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to which the entry will be added.</param>
+    /// <param name="key">The key to check for existence in the dictionary.</param>
+    /// <returns><see langword="true"/> if a new entry was added to the dictionary, <see langword="false"/> otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="key"/> is <see
+    /// langword="null"/>.</exception>
+    public static bool AddIfNecessary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+        => AddIfNecessary(dictionary, key, typeof(TValue));
 }
