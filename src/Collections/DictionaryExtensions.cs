@@ -97,14 +97,44 @@ public static class DictionaryExtensions
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary from which the item will be retrieved. Cannot be <see langword="null"/>.</param>
     /// <param name="key">The key of the item to retrieve from the dictionary. Cannot be <see langword="null"/>.</param>
-    /// <returns>The value associated with <paramref name="key"/> or <see langword="default"/> of <typeparamref name="TValue"/> if the dictionary does not contain the specified key</returns>
+    /// <param name="defaultValue">The default value to return if the index is out of bounds. The default value is <see langword="default"/>.</param>
+    /// <returns>The value associated with <paramref name="key"/> or <paramref name="defaultValue"/> if the dictionary does not contain the specified key.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="key"/> is <see langword="null"/>.</exception>
-    public static TValue? GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+    public static TValue? GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue? defaultValue = default)
     {
         if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
         if (key is null) throw new ArgumentNullException(nameof(key));
 
-        return dictionary.TryGetValue(key, out var value) ? value : default;
+        return dictionary.TryGetValue(key, out var value) ? value : defaultValue;
+    }
+
+    /// <summary>
+    /// Retrieves the value associated with the specified key from the dictionary, or creates and adds a new value if the key does not exist.
+    /// </summary>
+    /// <remarks>This method is useful for scenarios where you need to ensure a key exists in the dictionary
+    /// and initialize its value if it does not. The <paramref name="valueFactory"/> is only invoked if the key is not
+    /// already present in the dictionary.</remarks>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to retrieve the value from or add the new value to. Cannot be <see langword="null"/>.</param>
+    /// <param name="key">The key whose associated value is to be retrieved or created. Cannot be <see langword="null"/>.</param>
+    /// <param name="valueFactory">A function that generates a value for the specified key if the key does not exist in the dictionary. Cannot be <see langword="null"/>.</param>
+    /// <returns>The value associated with the specified key if it exists, the newly created value otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="valueFactory"/> is <see
+    /// langword="null"/>.</exception>
+    public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
+    {
+        if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
+        if (key is null) throw new ArgumentNullException(nameof(key));
+        if (valueFactory is null) throw new ArgumentNullException(nameof(valueFactory));
+
+        if (!dictionary.TryGetValue(key, out var value))
+        {
+            value = valueFactory(key);
+            dictionary.Add(key, value);
+        }
+
+        return value;
     }
 
     /// <summary>
@@ -117,11 +147,11 @@ public static class DictionaryExtensions
     /// <param name="value">The value to associate with the key.</param>
     /// <returns>The value that was added or updated in the dictionary.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="key"/> is <see langword="null"/>.</exception>
-    public static TValue SetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+    public static TValue UpdateOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
         if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
         if (key is null) throw new ArgumentNullException(nameof(key));
-        
+
         if (dictionary.ContainsKey(key))
         {
             dictionary[key] = value;
@@ -130,7 +160,40 @@ public static class DictionaryExtensions
         {
             dictionary.Add(key, value);
         }
-        
+
+        return value;
+    }
+
+    /// <summary>
+    /// Updates the value associated with the specified key in the dictionary, or creates a new key-value pair if the
+    /// key does not exist.
+    /// </summary>
+    /// <remarks>If the specified <paramref name="key"/> already exists in the dictionary, its value is
+    /// replaced with the result of <paramref name="valueFactory"/>. If the key does not exist, a new key-value pair is
+    /// added to the dictionary.</remarks>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to update or create the key-value pair in. Cannot be <see langword="null"/>.</param>
+    /// <param name="key">The key to update or add. Cannot be <see langword="null"/>.</param>
+    /// <param name="valueFactory">A function that generates the value to associate with the key. Cannot be <see langword="null"/>.</param>
+    /// <returns>The value that was added to the dictionary or used to update the existing key.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="valueFactory"/> is <see langword="null"/>.</exception>
+    public static TValue UpdateOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
+    {
+        if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
+        if (key is null) throw new ArgumentNullException(nameof(key));
+        if (valueFactory is null) throw new ArgumentNullException(nameof(valueFactory));
+
+        var value = valueFactory(key);
+
+        if (!dictionary.ContainsKey(key))
+        {
+            dictionary.Add(key, value);
+        }
+        else
+        {
+            dictionary[key] = value;
+        }
         return value;
     }
 

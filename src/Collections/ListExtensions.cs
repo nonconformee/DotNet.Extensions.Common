@@ -221,6 +221,24 @@ public static class ListExtensions
     }
 
     /// <summary>
+    /// Gets the element at the specified index or returns the default value of <typeparamref name="T"/> if the index is out of bounds.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list to retrieve the element from. Cannot be <see langword="null"/>.</param>
+    /// <param name="index">The zero-based index of the element to retrieve.</param>
+    /// <param name="defaultValue">The default value to return if the index is out of bounds. The default value is <see langword="default"/>.</param>
+    /// <returns>The element at the specified index or <paramref name="defaultValue"/> if the index is out of bounds.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>"
+    public static T? GetOrDefault<T>(this IList<T?> list, int index, T? defaultValue = default)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Index cannot be negative.");
+
+        return index >= 0 && index < list.Count ? list[index] : default;
+    }
+
+    /// <summary>
     /// Swaps the elements at the specified indices in the list.
     /// </summary>
     /// <remarks>If <paramref name="index1"/> and <paramref name="index2"/> are the same, the method performs
@@ -306,5 +324,56 @@ public static class ListExtensions
         }
         
         list.Insert(newIndex, item);
+    }
+
+    /// <summary>
+    /// Moves an element within the list to the position of another element.
+    /// </summary>
+    /// <remarks>If <paramref name="item"/> and <paramref name="itemTo"/> are the same, the method
+    /// performs no operation.</remarks>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list containing the element to move. Cannot be <see langword="null"/>.</param>
+    /// <param name="item">The element to move. Must be in the list.</param>
+    /// <param name="itemTo">The element to which <paramref name="item"/> should be moved. Must be in the list.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="item"/> or <paramref name="itemTo"/> is does not exist in the list.</exception>
+    public static void Move<T> (this IList<T> list, T item, T itemTo)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        var itemIndex = list.IndexOf(item);
+        var itemToIndex = list.IndexOf(itemTo);
+
+        if(itemIndex == -1)
+        {
+            throw new ArgumentException("Item to move not found in list.", nameof(item));
+        }
+
+        if(itemToIndex == -1)
+        {
+            throw new ArgumentException("Item to move to not found in list.", nameof(itemTo));
+        }
+
+        list.Move(itemIndex, itemToIndex);
+    }
+
+    /// <summary>
+    /// Applies a transformation function to each element in the specified list, replacing each element with the result of the transformation.
+    /// </summary>    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list whose elements will be transformed. Cannot be <see langword="null"/>.</param>
+    /// <param name="transform">A function that defines the transformation to apply to each element. Cannot be <see langword="null"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="transform"/> is <see langword="null"/>.</exception>
+    /// <remarks>This method modifies the original list by replacing each element with the result of the
+    /// <paramref name="transform"/> function. The transformation is applied in-place, and the list retains the same
+    /// number of elements.</remarks>
+    public static void Transform<T> (this IList<T> list, Func<T,T> transform)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (transform is null) throw new ArgumentNullException(nameof(transform));
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i] = transform(list[i]);
+        }
     }
 }

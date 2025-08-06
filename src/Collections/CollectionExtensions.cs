@@ -378,37 +378,6 @@ public static class CollectionExtensions
     }
 
     /// <summary>
-    /// Disposes all <see cref="IDisposable"/> objects within the collection and optionally the collection itself if it implements <see cref="IDisposable"/>.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the collection.</typeparam>
-    /// <param name="collection">The collection of objects to dispose. Cannot be <see langword="null"/>.</param>
-    /// <returns><see langword="true"/> if at least one object or the collection itself was disposed, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static bool DisposeAll<T>(this ICollection<T> collection)
-    {
-        if (collection is null) throw new ArgumentNullException(nameof(collection));
-
-        var disposed = false;
-
-        foreach (var item in collection)
-        {
-            if (item is IDisposable disposable1)
-            {
-                disposable1.Dispose();
-                disposed = true;
-            }
-        }
-
-        if (collection is IDisposable disposable2)
-        {
-            disposable2.Dispose();
-            disposed = true;
-        }
-
-        return disposed;
-    }
-
-    /// <summary>
     /// Divides the elements of the specified collection into smaller lists of a given size.
     /// </summary>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>

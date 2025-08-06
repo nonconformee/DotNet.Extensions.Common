@@ -102,13 +102,14 @@ public static class QueueExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the queue.</typeparam>
     /// <param name="queue">The queue from which the item will be dequeued. Cannot be <see langword="null"/>.</param>
-    /// <returns>The value of the dequeued item or <see langword="default"/> of <typeparamref name="T"/> if the queue is empty.</returns>
+    /// <param name="defaultValue">The default value to return if the index is out of bounds. The default value is <see langword="default"/>.</param>
+    /// <returns>The value of the dequeued item or <paramref name="defaultValue"/> if the queue is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
-    public static T? DequeueOrDefault<T>(this Queue<T> queue)
+    public static T? DequeueOrDefault<T>(this Queue<T> queue, T? defaultValue = default)
     {
         if (queue is null) throw new ArgumentNullException(nameof(queue));
 
-        return queue.Count > 0 ? queue.Dequeue() : default;
+        return queue.Count > 0 ? queue.Dequeue() : defaultValue;
     }
 
     /// <summary>
@@ -116,12 +117,13 @@ public static class QueueExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the queue.</typeparam>
     /// <param name="queue">The queue from which the item will be peeked. Cannot be <see langword="null"/>.</param>
-    /// <returns>The value of the peeked item or <see langword="default"/> of <typeparamref name="T"/> if the queue is empty.</returns>
+    /// <param name="defaultValue">The default value to return if the index is out of bounds. The default value is <see langword="default"/>.</param>
+    /// <returns>The value of the peeked item or <paramref name="defaultValue"/> if the queue is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="queue"/> is <see langword="null"/>.</exception>
-    public static T? PeekOrDefault<T>(this Queue<T> queue)
+    public static T? PeekOrDefault<T>(this Queue<T> queue, T? defaultValue = default)
     {
         if (queue is null) throw new ArgumentNullException(nameof(queue));
 
-        return queue.Count > 0 ? queue.Peek() : default;
+        return queue.Count > 0 ? queue.Peek() : defaultValue;
     }
 }

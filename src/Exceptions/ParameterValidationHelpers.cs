@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace nonconformee.DotNet.Extensions.Exceptions;
 
+// TODO Use of parameter check helpers (do not use because XML documentation auto-complete does not recognize the exceptions thrown (?)
+
 public static class ParameterValidationHelpers
 {
     public static void ThrowIfIndexArgumentIsOutOfRange<T> (this ICollection<T> collection, int index, int? count = null, [CallerArgumentExpression("collection")] string argExpr = null)

@@ -5,6 +5,8 @@ using System.Collections;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
+// TODO Ensure all default values are documented.
+
 /// <summary>
 /// Provides extension methods for <see cref="IEnumerable{T}"/>.
 /// </summary>
@@ -294,6 +296,82 @@ public static class EnumerableExtensions
         firstElement = enumerator.Current;
         
         return new PeekedEnumerable<T>(enumerator, hasFirstElement, firstElement);
+    }
+
+    /// <summary>
+    /// Disposes all <see cref="IDisposable"/> objects within the sequence and optionally the sequence implementation itself if it implements <see cref="IDisposable"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="sequence">The sequence of objects to dispose. Cannot be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if at least one object or the sequence itself was disposed, <see langword="false"/> otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
+    public static bool DisposeAll<T>(this IEnumerable<T> sequence)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+
+        var disposed = false;
+
+        foreach (var item in sequence)
+        {
+            if (item is IDisposable disposable1)
+            {
+                disposable1.Dispose();
+                disposed = true;
+            }
+        }
+
+        if (sequence is IDisposable disposable2)
+        {
+            disposable2.Dispose();
+            disposed = true;
+        }
+
+        return disposed;
+    }
+
+    /// <summary>
+    /// Disposes all <see cref="IAsyncDisposable"/> objects within the sequence and optionally the sequence implementation itself if it implements <see cref="IAsyncDisposable"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="sequence">The sequence of objects to dispose. Cannot be <see langword="null"/>.</param>
+    /// <param name="includeSynchronous"><see langword="true"/> if synchronous dispose (<see cref="IDisposable"/>) shall also be called (same as calling <see cref="DisposeAll{T}(IEnumerable{T})"/>), <see langword="false"/> if only <see cref="IAsyncDisposable"/> shall be called.</param>
+    /// <returns><see langword="true"/> if at least one object or the sequence itself was disposed, <see langword="false"/> otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
+    /// <remarks>If <paramref name="includeSynchronous"/> is <see langword="true"/>, <see cref="IAsyncDisposable"/> is called befor <see cref="IDisposable"/>.</remarks>
+    public static async Task<bool> DisposeAllAsync<T>(this IEnumerable<T> sequence, bool? includeSynchronous = true)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+
+        var disposed = false;
+
+        foreach (var item in sequence)
+        {
+            if (item is IAsyncDisposable disposable1)
+            {
+                await disposable1.DisposeAsync();
+                disposed = true;
+            }
+
+            if (item is IDisposable disposable2)
+            {
+                disposable2.Dispose();
+                disposed = true;
+            }
+        }
+
+        if (sequence is IAsyncDisposable disposable3)
+        {
+            await disposable3.DisposeAsync();
+            disposed = true;
+        }
+
+        if (sequence is IDisposable disposable4)
+        {
+            disposable4.Dispose();
+            disposed = true;
+        }
+
+        return disposed;
     }
 
     private sealed class PeekedEnumerable<T>(

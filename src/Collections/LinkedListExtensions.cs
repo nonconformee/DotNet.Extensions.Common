@@ -176,4 +176,84 @@ public static class LinkedListExtensions
     /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static void AddLastRange<T>(this LinkedList<T> list, params T[] items)
         => AddLastRange(list, (IEnumerable<T>)items);
+
+    /// <summary>
+    /// Enumerates the elements of the linked list in forward order, starting from the first node.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to enumerate. Cannot be <see langword="null"/>.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that iterates through the elements of the linked list in forward order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> ForwardItems<T>(this LinkedList<T> list)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        var current = list.First;
+
+        while (current is not null)
+        {
+            yield return current.Value;
+            current = current.Next;
+        }
+    }
+
+    /// <summary>
+    /// Enumerates the elements of the linked list in backward order, starting from the last node.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to enumerate. Cannot be <see langword="null"/>.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that iterates through the elements of the linked list in backward order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> BackwardItems<T>(this LinkedList<T> list)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        var current = list.Last;
+
+        while(current is not null)
+        {
+            yield return current.Value;
+            current = current.Previous;
+        }
+    }
+
+    /// <summary>
+    /// Enumerates the nodes of the linked list in forward order, starting from the first node.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to enumerate. Cannot be <see langword="null"/>.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that iterates through the nodes of the linked list in forward order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<LinkedListNode<T>> ForwardNodes<T>(this LinkedList<T> list)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        var current = list.First;
+
+        while (current is not null)
+        {
+            yield return current;
+            current = current.Next;
+        }
+    }
+
+    /// <summary>
+    /// Enumerates the nodes of the linked list in backward order, starting from the last node.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to enumerate. Cannot be <see langword="null"/>.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that iterates through the nodes of the linked list in backward order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<LinkedListNode<T>> BackwardNodes<T>(this LinkedList<T> list)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        var current = list.Last;
+
+        while (current is not null)
+        {
+            yield return current;
+            current = current.Previous;
+        }
+    }
 }

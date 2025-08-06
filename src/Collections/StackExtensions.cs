@@ -102,13 +102,14 @@ public static class StackExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the stack.</typeparam>
     /// <param name="stack">The stack from which the item will be popped. Cannot be <see langword="null"/>.</param>
-    /// <returns>The value of the popped item or <see langword="default"/> of <typeparamref name="T"/> if the stack is empty.</returns>
+    /// <param name="defaultValue">The default value to return if the index is out of bounds. The default value is <see langword="default"/>.</param>
+    /// <returns>The value of the popped item or <paramref name="defaultValue"/> if the stack is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
-    public static T? PopOrDefault<T>(this Stack<T> stack)
+    public static T? PopOrDefault<T>(this Stack<T> stack, T? defaultValue = default)
     {
         if (stack is null) throw new ArgumentNullException(nameof(stack));
 
-        return stack.Count > 0 ? stack.Pop() : default;
+        return stack.Count > 0 ? stack.Pop() : defaultValue;
     }
 
     /// <summary>
@@ -116,12 +117,13 @@ public static class StackExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the stack.</typeparam>
     /// <param name="stack">The stack from which the item will be peeked. Cannot be <see langword="null"/>.</param>
-    /// <returns>The value of the peeked item or <see langword="default"/> of <typeparamref name="T"/> if the stack is empty.</returns>
+    /// <param name="defaultValue">The default value to return if the index is out of bounds. The default value is <see langword="default"/>.</param>
+    /// <returns>The value of the peeked item or <paramref name="defaultValue"/> if the stack is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="stack"/> is <see langword="null"/>.</exception>
-    public static T? PeekOrDefault<T>(this Stack<T> stack)
+    public static T? PeekOrDefault<T>(this Stack<T> stack, T? defaultValue = default)
     {
         if (stack is null) throw new ArgumentNullException(nameof(stack));
 
-        return stack.Count > 0 ? stack.Peek() : default;
+        return stack.Count > 0 ? stack.Peek() : defaultValue;
     }
 }
