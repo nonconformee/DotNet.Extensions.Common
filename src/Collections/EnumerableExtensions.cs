@@ -2,6 +2,7 @@
 using nonconformee.DotNet.Extensions.Exceptions;
 using nonconformee.DotNet.Extensions.Randomizing;
 using System.Collections;
+using System.Drawing;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
@@ -257,27 +258,48 @@ public static class EnumerableExtensions
     public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> sequence, int batchSize)
     {
         if (sequence is null) throw new ArgumentNullException(nameof(sequence));
-        batchSize.ThrowIfArgumentIsOutOfRange(1, int.MaxValue);
+        if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than zero.");
+
+        IEnumerable<T> YieldBatchElements<T>(IEnumerator<T> source, int size)
+        {
+            int i = 0;
+            do
+            {
+                yield return source.Current;
+            } while (++i < size && source.MoveNext());
+        }
 
         using var enumerator = sequence.GetEnumerator();
-        var batch = new List<T>(batchSize);
 
         while (enumerator.MoveNext())
         {
-            batch.Add(enumerator.Current);
-
-            if(batch.Count >= batchSize)
-            {
-                yield return new List<T>(batch);
-                batch.Clear();
-            }
-        }
-
-        if(batch.Count > 0)
-        {
-            yield return batch;
+            yield return YieldBatchElements(enumerator, batchSize);
         }
     }
+
+    /// <summary>
+    /// Returns distinct elements from a sequence according to a specified key selector.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <typeparam name="TKey">The type of key to distinguish elements.</typeparam>
+    /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
+    /// <param name="keySelector">A function to extract the key for each element. Cannot be <see langword="null"/>.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> containing only distinct elements according to the key selector.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector)
+    {
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (keySelector is null) throw new ArgumentNullException(nameof(keySelector));
+
+        var seenKeys = new HashSet<TKey>();
+        foreach (var element in source)
+        {
+            if (seenKeys.Add(keySelector(element)))
+                yield return element;
+        }
+    }
+
+    // TODO : Add overloads for DistinctBy which also takes an equality comparer as optional parameter.
 
     /// <summary>
     /// Returns an enumerable that allows peeking at the first element of the sequence without consuming it.

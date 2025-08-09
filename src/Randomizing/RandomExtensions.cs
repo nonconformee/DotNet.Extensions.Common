@@ -300,7 +300,7 @@ public static class RandomExtensions
     ///     A random single precision floating point value between 0.0 (inclusive) and <paramref name="max" /> (exclusive).
     /// </returns>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
-    public static float NextFloat(this Random randomizer, float max)
+    public static float NextSingle(this Random randomizer, float max)
     {
         return randomizer.NextFloat(0.0f, max);
     }
@@ -316,7 +316,7 @@ public static class RandomExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
     /// <exception cref="NotFiniteNumberException"> <paramref name="min" /> or <paramref name="max" /> is either "NaN"/"Not-a-Number" or infinity (positive or negative). </exception>
-    public static float NextFloat(this Random randomizer, float min, float max)
+    public static float NextSingle(this Random randomizer, float min, float max)
     {
         if (randomizer == null)
         {
@@ -593,136 +593,6 @@ public static class RandomExtensions
         }
 
         return max - Math.Sqrt((1 - u) * (max - min) * (max - mode));
-    }
-
-    /// <summary>
-    ///     Shuffles all items of a list randomly.
-    /// </summary>
-    /// <typeparam name="T"> The type of items in <paramref name="list" />. </typeparam>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="list"> The list to be shuffled. </param>
-    /// <returns>
-    ///     The number of shuffled items.
-    ///     Zero if the list contains no items.
-    /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         Shuffling of items is done in-place, so during shuffling some items might appear twice in the list.
-    ///     </para>
-    ///     <para>
-    ///         This is a O(n) operation where n is the number of items in <paramref name="list" />.
-    ///     </para>
-    /// </remarks>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> or <paramref name="list" /> is null. </exception>
-    public static int Shuffle<T>(this Random randomizer, IList<T> list)
-    {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        if (list == null)
-        {
-            throw new ArgumentNullException(nameof(list));
-        }
-
-        return randomizer.Shuffle(list, 0, list.Count);
-    }
-
-    /// <summary>
-    ///     Shuffles all items of a list, starting at a specified index, randomly.
-    /// </summary>
-    /// <typeparam name="T"> The type of items in <paramref name="list" />. </typeparam>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="list"> The list to be shuffled. </param>
-    /// <param name="index"> The index at which the shuffling starts. </param>
-    /// <returns>
-    ///     The number of shuffled items.
-    ///     Zero if <paramref name="index" /> points to the end of the list (or is the same as the number of items in the list respectively).
-    /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         Shuffling of items is done in-place, so during shuffling some items might appear twice in the list.
-    ///     </para>
-    ///     <para>
-    ///         This is a O(n) operation where n is the number of items in <paramref name="list" /> minus <paramref name="index" />.
-    ///     </para>
-    /// </remarks>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> or <paramref name="list" /> is null. </exception>
-    /// <exception cref="ArgumentOutOfRangeException"> <paramref name="index" /> is less than zero or specifies an index outside the size of the list. </exception>
-    public static int Shuffle<T>(this Random randomizer, IList<T> list, int index)
-    {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        if (list == null)
-        {
-            throw new ArgumentNullException(nameof(list));
-        }
-
-        return randomizer.Shuffle(list, index, list.Count - index);
-    }
-
-    /// <summary>
-    ///     Shuffles items of a list in a specified range randomly.
-    /// </summary>
-    /// <typeparam name="T"> The type of items in <paramref name="list" />. </typeparam>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="list"> The list to be shuffled. </param>
-    /// <param name="index"> The index at which the shuffling starts. </param>
-    /// <param name="count"> The number of items to shuffle, starting at <paramref name="index" />. </param>
-    /// <returns>
-    ///     The number of shuffled items.
-    ///     Zero if <paramref name="count" /> is zero.
-    /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         Shuffling of items is done in-place, so during shuffling some items might appear twice in the list.
-    ///     </para>
-    ///     <para>
-    ///         This is a O(n) operation where n is <paramref name="count" />.
-    ///     </para>
-    /// </remarks>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> or <paramref name="list" /> is null. </exception>
-    /// <exception cref="ArgumentOutOfRangeException"> <paramref name="index" /> or <paramref name="count" /> is less than zero or specifies a range outside the size of the list. </exception>
-    public static int Shuffle<T>(this Random randomizer, IList<T> list, int index, int count)
-    {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        if (list == null)
-        {
-            throw new ArgumentNullException(nameof(list));
-        }
-
-        if (count == 0)
-        {
-            return 0;
-        }
-
-        if ((index < 0) || (index >= list.Count))
-        {
-            throw new ArgumentOutOfRangeException(nameof(index));
-        }
-
-        if ((count < 0) || ((index + count) > list.Count))
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        for (int i1 = index; i1 < (index + count); i1++)
-        {
-            int newIndex = randomizer.Next(index, i1 + 1);
-            T temp = list[newIndex];
-            list[newIndex] = list[i1];
-            list[i1] = temp;
-        }
-
-        return count;
     }
 
     #endregion

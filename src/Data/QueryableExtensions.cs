@@ -13,37 +13,19 @@ public static class QueryableExtensions
     /// <param name="queryable">The query.</param>
     /// <param name="page">The zero-indexed page. <see langword="null"/> if pagination is not used.</param>
     /// <param name="pageSize">The size of the page, number of elements. <see langword="null"/> if pagination is not used.</param>
-    /// <returns></returns>
+    /// <returns>The query which limits the result to the specified page.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="queryable"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Only <paramref name="page"/> or <paramref name="pageSize"/> is specified (not <see langword="null"/>) but not both.</exception>
     /// <remarks>For convenience, <paramref name="page"/> and <paramref name="pageSize"/> can be <see langword="null"/> if pagination is not used.
     /// This allows to use <see cref="Page"/> if pagination is optional without having a branch to build the corresponding query.</remarks>
     public static IQueryable<T> Page<T>(this IQueryable<T> queryable, int? page, int? pageSize)
     {
-        if (page is null && pageSize is not null)
-        {
-            throw new ArgumentException("Page cannot be null if page size is set.", nameof(page));
-        }
+        if (page is null && pageSize is not null) throw new ArgumentException("Page cannot be null if page size is set.", nameof(page));
+        if (page is not null && pageSize is null) throw new ArgumentException("Page size cannot be null if page is set.", nameof(pageSize));
+        if (pageSize < 0) throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size cannot be less than zero.");
 
-        if (page is not null && pageSize is null)
-        {
-            throw new ArgumentException("Page size cannot be null if page is set.", nameof(pageSize));
-        }
-
-        if(pageSize < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size cannot be less than zero."); 
-        }
-
-        if (page is null && pageSize is null)
-        {
-            return queryable;
-        }
-
-        if(pageSize == 0)
-        {
-            return queryable
-                .Where(x => false);
-        }
+        if (page is null && pageSize is null) return queryable;
+        if (pageSize == 0) return queryable.Where(x => false);
 
         var usedPageSize = pageSize!.Value;
         var usedPage = page!.Value * usedPageSize;
@@ -51,5 +33,33 @@ public static class QueryableExtensions
         return queryable
             .Skip(usedPage)
             .Take(usedPageSize);
+    }
+
+    /// <summary>
+    /// Limits the query result to elements which are not <see langword="null"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of elements being queried.</typeparam>
+    /// <param name="queryable">The query.</param>
+    /// <returns>The query which filters elements which are <see langword="null"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="queryable"/> is <see langword="null"/>.</exception>
+    public static IQueryable<T> NotNull<T>(this IQueryable<T> queryable)
+    {
+        if (queryable is null) throw new ArgumentNullException(nameof(queryable));
+
+        return queryable.Where(x => x != null);
+    }
+
+    /// <summary>
+    /// Limits the query to result no elements unconditionally.
+    /// </summary>
+    /// <typeparam name="T">The type of elements being queried.</typeparam>
+    /// <param name="queryable">The query.</param>
+    /// <returns>The query which will return no results.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="queryable"/> is <see langword="null"/>.</exception>
+    public static IQueryable<T> Nothing<T>(this IQueryable<T> queryable)
+    {
+        if (queryable is null) throw new ArgumentNullException(nameof(queryable));
+
+        return queryable.Where(x => false);
     }
 }

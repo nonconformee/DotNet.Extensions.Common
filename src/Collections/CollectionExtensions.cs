@@ -188,6 +188,8 @@ public static class CollectionExtensions
         return itemsToRemove;
     }
 
+    // TODO : Add overloads for RemoveWhere which takes an equality comparer.
+
     /// <summary>
     /// Adds an item to the collection if the item is not <see langword="null"/>.
     /// </summary>
@@ -455,4 +457,6 @@ public static class CollectionExtensions
             .Select(x => x.Value)
             .ToList();
     }
+
+    // TODO : Add an overload for FindDuplicates which takes an optional key selector.
 }
