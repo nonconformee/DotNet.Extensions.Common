@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace nonconformee.DotNet.Extensions.Exceptions;
 
-// TODO Use of parameter check helpers (do not use because XML documentation auto-complete does not recognize the exceptions thrown (?)
+// TODO : Use of parameter check helpers (do not use because XML documentation auto-complete does not recognize the exceptions thrown (?)
 
 public static class ParameterValidationHelpers
 {

@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
-// TODO Ensure all default values are documented.
+// TODO : Ensure all default values are documented.
 
 /// <summary>
 /// Provides extension methods for <see cref="IEnumerable{T}"/>.
@@ -284,22 +284,24 @@ public static class EnumerableExtensions
     /// <typeparam name="TKey">The type of key to distinguish elements.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
     /// <param name="keySelector">A function to extract the key for each element. Cannot be <see langword="null"/>.</param>
+    /// <param name="equalityComparer">An optional equality comparer to compare keys. If <see langword="null"/>, the default equality comparer is used.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> containing only distinct elements according to the key selector.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
-    public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector)
+    public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector, IEqualityComparer<TKey>? equalityComparer = null)
     {
         if (source is null) throw new ArgumentNullException(nameof(source));
         if (keySelector is null) throw new ArgumentNullException(nameof(keySelector));
 
-        var seenKeys = new HashSet<TKey>();
+        var seenKeys = new HashSet<TKey>(equalityComparer ?? EqualityComparer<TKey>.Default);
+
         foreach (var element in source)
         {
             if (seenKeys.Add(keySelector(element)))
+            {
                 yield return element;
+            }
         }
     }
-
-    // TODO : Add overloads for DistinctBy which also takes an equality comparer as optional parameter.
 
     /// <summary>
     /// Returns an enumerable that allows peeking at the first element of the sequence without consuming it.

@@ -188,7 +188,29 @@ public static class CollectionExtensions
         return itemsToRemove;
     }
 
-    // TODO : Add overloads for RemoveWhere which takes an equality comparer.
+    /// <summary>
+    /// Removes all elements matching the given element using the given equality comparer.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection"> The collection from which elements will be removed. Cannot be <see langword="null"/>.</param>
+    /// <param name="element">The element to match for removal. Can be <see langword="null"/>.</param>
+    /// <param name="comparer">The equality comparer to use for matching elements. Can be <see langword="null"/>, in which case the default comparer is used.</param>
+    /// <returns>The list of removed elements.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="element"/> is <see langword="null"/>.</exception>
+    public static List<T> RemoveWhere<T>(this ICollection<T> collection, T element, IEqualityComparer<T>? comparer = null)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+
+        comparer ??= EqualityComparer<T>.Default;
+        var itemsToRemove = collection.Where(x => comparer.Equals(x, element)).ToList();
+
+        foreach (var item in itemsToRemove)
+        {
+            collection.Remove(item);
+        }
+
+        return itemsToRemove;
+    }
 
     /// <summary>
     /// Adds an item to the collection if the item is not <see langword="null"/>.
@@ -458,5 +480,48 @@ public static class CollectionExtensions
             .ToList();
     }
 
-    // TODO : Add an overload for FindDuplicates which takes an optional key selector.
+    /// <summary>
+    /// Identifies and groups duplicate elements in the specified collection.
+    /// </summary>
+    /// <remarks>The method groups elements based on their equality as determined by the specified or default
+    /// equality comparer after applying the key selector function. Each group in the result contains all occurrences of a particular element from the input
+    /// collection.</remarks>
+    /// <typeparam name="T">The type of elements in the collection. Must be non-nullable.</typeparam>
+    /// <typeparam name="TKey">The type of the key returned by the key selector function. Must be non-nullable.</typeparam>
+    /// <param name="collection">The collection to search for duplicate elements. Cannot be <see langword="null"/>.</param>
+    /// <param name="keySelector">A function to extract the key for each element.</param>
+    /// <param name="includeUniques">A value indicating whether to include unique elements (elements that appear only once) in the result. If <see
+    /// langword="true"/>, unique elements will be included as single-item groups; otherwise, only duplicates are
+    /// included.</param>
+    /// <param name="equalityComparer">An optional equality comparer to use for comparing elements. If <see langword="null"/>, the default equality
+    /// comparer for type <typeparamref name="T"/> is used.</param>
+    /// <returns>A collection of lists, where each list contains all occurrences of a specific element from the input collection.
+    /// If <paramref name="includeUniques"/> is <see langword="false"/>, only lists with more than one element are
+    /// included.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
+    public static ICollection<List<T>> FindDuplicates<T, TKey>(this ICollection<T> collection, Func<T, TKey> keySelector, bool includeUniques = false, IEqualityComparer<TKey>? equalityComparer = null)
+        where TKey : notnull
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+        if (keySelector is null) throw new ArgumentNullException(nameof(keySelector));
+
+        var duplicates = new Dictionary<TKey, List<T>>(equalityComparer ?? EqualityComparer<TKey>.Default);
+
+        foreach (var item in collection)
+        {
+            if (item is null)
+            {
+                continue;
+            }
+
+            var key = keySelector(item);
+            duplicates.AddIfNecessary(key);
+            duplicates[key].Add(item);
+        }
+
+        return duplicates
+            .Where(x => includeUniques || x.Value.Count > 1)
+            .Select(x => x.Value)
+            .ToList();
+    }
 }
