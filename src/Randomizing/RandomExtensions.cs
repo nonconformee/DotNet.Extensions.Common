@@ -1,4 +1,5 @@
 ﻿
+using System.Net.Sockets;
 using System.Text;
 
 namespace nonconformee.DotNet.Extensions.Randomizing;
@@ -16,51 +17,46 @@ public static class RandomExtensions
     #region Static Methods
 
     /// <summary>
-    ///     Fills a <see cref="Stream" /> with random bytes.
+    /// Fills a <see cref="Stream" /> with random bytes.
     /// </summary>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="stream"> The <see cref="Stream" /> to fill. </param>
-    /// <param name="length"> The amount of bytes to fill in the <see cref="Stream" /> at its current position. </param>
-    /// <returns>
-    ///     The number of written bytes to the <see cref="Stream" />.
-    /// </returns>
+    /// <param name="randomizer"> The randomizer. Cannot be <see langword="null"/>. </param>
+    /// <param name="stream"> The <see cref="Stream" /> to fill. Cannot be <see langword="null"/>. </param>
+    /// <param name="length"> The amount of bytes to fill in the <see cref="Stream" /> at its current position. Can be <see langword="null"/> to fill the entire stream. </param>
+    /// <returns> The number of written bytes to the <see cref="Stream" />. The actual amount of bytes written might be lower than specified by <paramref name="length"/> if the stream is shorter.</returns>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> or <paramref name="stream" /> is null. </exception>
-    /// <exception cref="NotWriteableStreamArgumentException"> <paramref name="stream" /> is not writeable. </exception>
+    /// <exception cref="ArgumentException"> <paramref name="stream" /> is not writeable. </exception>
     /// <exception cref="ArgumentOutOfRangeException"> <paramref name="length" /> is less than zero. </exception>
-    public static int FillStream(this Random randomizer, Stream stream, int length)
+    /// <remarks>If the length is not specified by <paramref name="length"/>, <paramref name="stream"/> must be seekable so the end of the stream can be determined.
+    /// Otherwise, the stream could be filled in an endless loop (e.g. when using <see cref="NetworkStream"/>).</remarks>
+    public static int FillStream(this Random randomizer, Stream stream, int? length = null)
     {
-        if (randomizer == null)
+        if (randomizer == null) throw new ArgumentNullException(nameof(randomizer));
+        if (stream == null) throw new ArgumentNullException(nameof(stream));
+        if (!stream.CanWrite) throw new ArgumentException("Stream cannot be written to.", nameof(stream));
+        if (length is not null && length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than zero if specified.");
+        if (length is null && !stream.CanSeek) throw new ArgumentException("Stream must be seekable if length is not specified.", nameof(stream));
+        
+        if(length is null)
         {
-            throw new ArgumentNullException(nameof(randomizer));
+            length = (int)(stream.Length - stream.Position);
+            if (length < 0) length = 0;
         }
 
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        int bytesWritten = 0;
 
-        if (!stream.CanWrite)
-        {
-            throw new NotWriteableStreamArgumentException(nameof(stream));
-        }
-
-        if (length < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length));
-        }
-
-        for (int i1 = 0; i1 < length; i1++)
+        for (int i = 0; i < length; i++)
         {
             stream.WriteByte(randomizer.NextByte());
+            bytesWritten++;
         }
-
-        return length;
+        
+        return bytesWritten;
     }
 
     /// <summary>
-    /// Returns random <see langword="true" /> or <see langword="false" />.
+    /// Returns random <see langword="true" /> or <see langword="false" /> with a 50/50 percent chance.
     /// </summary>
-    /// <param name="randomizer"> The randomizer to use. Cannot be <see langword="null"/>.</param>
+    /// <param name="randomizer"> The randomizer. Cannot be <see langword="null"/>.</param>
     /// <returns><see langword="true" /> or <see langword="false" />.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="randomizer" /> is <see langword="null"/>.</exception>
     public static bool NextBoolean(this Random randomizer)
@@ -70,25 +66,19 @@ public static class RandomExtensions
     }
 
     /// <summary>
-    /// Returns random <see langword="true" /> or <see langword="false" /> depending on a specified chance.
+    /// Returns random <see langword="true" /> or <see langword="false" /> with a specified chance for <see langword="true" />.
     /// </summary>
-    /// <param name="randomizer">The randomizer to use. Cannot be <see langword="null"/>.</param>
+    /// <param name="randomizer">The randomizer. Cannot be <see langword="null"/>.</param>
     /// <param name="chance">The chance to return <see langword="true" />, between 0.0 (never) and 1.0 (always).</param>
     /// <returns><see langword="true" /> or <see langword="false" /> based on the specified chance.</returns>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
-    /// <exception cref="NotFiniteNumberException"> <paramref name="chance" /> is either "NaN"/"Not-a-Number" or infinity (positive or negative). </exception>
+    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is <see langword="null"/>. </exception>
+    /// <exception cref="NotFiniteNumberException"> <paramref name="chance" /> is not a finite number. </exception>
     public static bool NextChance(this Random randomizer, double chance)
     {
         if (randomizer is null) throw new ArgumentNullException(nameof(randomizer));
+        if (chance.IsNanOrInfinity()) throw new NotFiniteNumberException(nameof(chance));
 
-        if (chance.IsNanOrInfinity())
-        {
-            throw new NotFiniteNumberException(nameof(chance));
-        }
-
-        double value = randomizer.NextDouble();
-
-        return value < chance;
+        return randomizer.NextDouble() < chance;
     }
 
     /// <summary>
@@ -100,6 +90,7 @@ public static class RandomExtensions
     public static byte NextByte(this Random randomizer)
     {
         if (randomizer is null) throw new ArgumentNullException(nameof(randomizer));
+
         return (byte)randomizer.Next(0, 256);
     }
 
@@ -110,9 +101,12 @@ public static class RandomExtensions
     /// <param name="max"> The allowed maximum value (inclusive). </param>
     /// <returns>A random <see langword="byte"/> value between 0 (inclusive) and <paramref name="max"/> (inclusive).</returns>
     /// <exception cref="ArgumentNullException"><paramref name="randomizer" /> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="max" /> is less than zero.</exception>
     public static byte NextByte(this Random randomizer, byte max)
     {
         if (randomizer is null) throw new ArgumentNullException(nameof(randomizer));
+        if (max < 0) throw new ArgumentOutOfRangeException(nameof(max), "Maximum value must be greater than or equal to zero.");
+        
         return (byte)randomizer.Next(0, max + 1);
     }
 
@@ -124,60 +118,50 @@ public static class RandomExtensions
     /// <param name="max"> The allowed maximum value (inclusive). </param>
     /// <returns>A random <see langword="byte"/> value between <paramref name="min"/> (inclusive) and <paramref name="max"/> (inclusive).</returns>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
+    /// <exception cref="ArgumentOutOfRangeException"> <paramref name="min" /> is less than zero or <paramref name="max" /> is less than zero. </exception>
     public static byte NextByte(this Random randomizer, byte min, byte max)
     {
         if (randomizer is null) throw new ArgumentNullException(nameof(randomizer));
+        if (min < 0) throw new ArgumentOutOfRangeException(nameof(min), "Minimum value must be greater than or equal to zero.");
+        if (max < 0) throw new ArgumentOutOfRangeException(nameof(max), "Maximum value must be greater than or equal to zero.");
         return (byte)randomizer.Next(min, max + 1);
     }
 
     /// <summary>
     ///     Fills a byte array with random values.
     /// </summary>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="buffer"> The byte array to fill. </param>
+    /// <param name="randomizer"> The randomizer to use. Cannot be <see langword="null"/>. </param>
+    /// <param name="buffer"> The byte array to fill. Cannot be <see langword="null"/>. </param>
     /// <param name="offset"> The offset in the byte array at which the random fill starts. </param>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
     /// <exception cref="ArgumentOutOfRangeException"> <paramref name="offset" /> is less than zero or outside the length of the array. </exception>
     public static void NextBytes(this Random randomizer, byte[] buffer, int offset)
     {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        if ((offset < 0) || (offset >= buffer.Length))
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
+        if (randomizer == null) throw new ArgumentNullException(nameof(randomizer));
+        if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+        if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be greater than or equal to zero.");
+        if (buffer.Length < offset) throw new ArgumentOutOfRangeException(nameof(buffer), "Offset is outside the length of the array.");
 
         randomizer.NextBytes(buffer, offset, buffer.Length - offset);
     }
 
     /// <summary>
-    ///     Fills a byte array with random values.
+    /// Fills a byte array with random values.
     /// </summary>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="buffer"> The byte array to fill. </param>
+    /// <param name="randomizer"> The randomizer to use. Cannot be <see langword="null"/>. </param>
+    /// <param name="buffer"> The byte array to fill. Cannot be <see langword="null"/>. </param>
     /// <param name="offset"> The offset in the byte array at which the random fill starts. </param>
     /// <param name="count"> The number of bytes to fill with random values, beginning at <paramref name="offset" />. </param>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
+    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> or <paramref name="buffer"/> is null. </exception>
     /// <exception cref="ArgumentOutOfRangeException"> <paramref name="offset" /> or <paramref name="count" /> is less than zero or the range specified by <paramref name="offset" /> and <paramref name="count" /> is outside the length of the array. </exception>
     public static void NextBytes(this Random randomizer, byte[] buffer, int offset, int count)
     {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        if ((offset < 0) || (offset >= buffer.Length))
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        if ((count < 0) || ((offset + count) > buffer.Length))
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        if (randomizer == null) throw new ArgumentNullException(nameof(randomizer));
+        if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+        if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be greater than or equal to zero.");
+        if (buffer.Length < offset) throw new ArgumentOutOfRangeException(nameof(buffer), "Offset is outside the length of the array.");
+        if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than or equal to zero.");
+        if (buffer.Length < (offset + count)) throw new ArgumentOutOfRangeException(nameof(buffer), "Offset and count exceed the length of the array.");
 
         for (int i1 = offset; i1 < (offset + count); i1++)
         {
@@ -186,26 +170,17 @@ public static class RandomExtensions
     }
 
     /// <summary>
-    ///     Gets a byte array of a specified length filled with random bytes.
+    /// Gets a byte array of a specified length filled with random bytes.
     /// </summary>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="length"> The number of randomized bytes in the array. </param>
-    /// <returns>
-    ///     The byte array which contains the specified number of randomized bytes.
-    /// </returns>
+    /// <param name="randomizer"> The randomizer to use. Cannot be <see langword="null"/>. </param>
+    /// <param name="length"> The number of randomized bytes in the array. Cannot be <see langword="null"/>. </param>
+    /// <returns> The byte array which contains the specified number of randomized bytes. </returns>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
     /// <exception cref="ArgumentOutOfRangeException"> <paramref name="length" /> is less than zero. </exception>
     public static byte[] NextBytes(this Random randomizer, int length)
     {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        if (length < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length));
-        }
+        if (randomizer == null) throw new ArgumentNullException(nameof(randomizer));
+        if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than or equal to zero.");
 
         byte[] array = new byte[length];
         randomizer.NextBytes(array);
@@ -244,6 +219,40 @@ public static class RandomExtensions
 
         double ticks = randomizer.NextDouble(min.Ticks, max.Ticks);
         return new DateTime((long)ticks);
+    }
+
+    /// <summary>
+    ///     Gets a random time span value.
+    /// </summary>
+    /// <param name="randomizer"> The randomizer to use. </param>
+    /// <returns>
+    ///     A random time span value between 0 (inclusive) and approx. 10'675'199 days (exclusive).
+    /// </returns>
+    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
+    public static TimeSpan NextTimeSpan(this Random randomizer)
+    {
+        return randomizer.NextTimeSpan(TimeSpan.Zero, TimeSpan.MaxValue);
+    }
+
+    /// <summary>
+    ///     Gets a random time span value.
+    /// </summary>
+    /// <param name="randomizer"> The randomizer to use. </param>
+    /// <param name="min"> The allowed minimum time span (inclusive). </param>
+    /// <param name="max"> The allowed maximum time span (exclusive). </param>
+    /// <returns>
+    ///     A random time span value between <paramref name="min" /> (inclusive) and <paramref name="max" /> (exclusive).
+    /// </returns>
+    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
+    public static TimeSpan NextTimeSpan(this Random randomizer, TimeSpan min, TimeSpan max)
+    {
+        if (randomizer == null)
+        {
+            throw new ArgumentNullException(nameof(randomizer));
+        }
+
+        double ticks = randomizer.NextDouble(min.Ticks, max.Ticks);
+        return new TimeSpan((long)ticks);
     }
 
     /// <summary>
@@ -512,40 +521,6 @@ public static class RandomExtensions
         }
 
         return result.ToString();
-    }
-
-    /// <summary>
-    ///     Gets a random time span value.
-    /// </summary>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <returns>
-    ///     A random time span value between 0 (inclusive) and approx. 10'675'199 days (exclusive).
-    /// </returns>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
-    public static TimeSpan NextTimeSpan(this Random randomizer)
-    {
-        return randomizer.NextTimeSpan(TimeSpan.Zero, TimeSpan.MaxValue);
-    }
-
-    /// <summary>
-    ///     Gets a random time span value.
-    /// </summary>
-    /// <param name="randomizer"> The randomizer to use. </param>
-    /// <param name="min"> The allowed minimum time span (inclusive). </param>
-    /// <param name="max"> The allowed maximum time span (exclusive). </param>
-    /// <returns>
-    ///     A random time span value between <paramref name="min" /> (inclusive) and <paramref name="max" /> (exclusive).
-    /// </returns>
-    /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
-    public static TimeSpan NextTimeSpan(this Random randomizer, TimeSpan min, TimeSpan max)
-    {
-        if (randomizer == null)
-        {
-            throw new ArgumentNullException(nameof(randomizer));
-        }
-
-        double ticks = randomizer.NextDouble(min.Ticks, max.Ticks);
-        return new TimeSpan((long)ticks);
     }
 
     /// <summary>
