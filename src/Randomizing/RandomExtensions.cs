@@ -424,18 +424,20 @@ public static class RandomExtensions
     /// Generates a random sentence of readable text.
     /// </summary>
     /// <param name="randomizer"> The randomizer. Cannot be <see langword="null"/>. </param>
-    /// <param name="words"> The number of words in the sentence. </param>
-    /// <param name="startWithLoremIpsum"> Indicates whether the sentence should start with &quot;lorem ipsum dolor sit amet&quot;. </param>
-    /// <param name="startWithCapital"> Indicates whether the first letter of the sentence should be a capital letter. </param>
-    /// <param name="endWithPeriod"> Indicates whether the sentence should end with a period. </param>
+    /// <param name="words"> The number of words in the sentence. Default value is a random number between 5 and 15.</param>
+    /// <param name="startWithLoremIpsum"> Indicates whether the sentence should start with &quot;lorem ipsum dolor sit amet&quot;. Default value is <see langword="true"/>.</param>
+    /// <param name="startWithCapital"> Indicates whether the first letter of the sentence should be a capital letter. Default value is <see langword="true"/>.</param>
+    /// <param name="endWithPeriod"> Indicates whether the sentence should end with a period. Default value is <see langword="true"/>.</param>
     /// <returns> The string with the amount of specified words. </returns>
     /// <exception cref="ArgumentNullException"> <paramref name="randomizer" /> is null. </exception>
     /// <exception cref="ArgumentOutOfRangeException"> <paramref name="words" /> is less than zero or <paramref name="startWithLoremIpsum" /> is true and <paramref name="words" /> is less than five. </exception>
-    public static string NextLoremIpsum(this Random randomizer, int words, bool startWithLoremIpsum, bool startWithCapital, bool endWithPeriod)
+    public static string NextLoremIpsum(this Random randomizer, int? words = null, bool startWithLoremIpsum = true, bool startWithCapital = true, bool endWithPeriod = true)
     {
+        words ??= randomizer.Next(5, 16);
+        
         if (randomizer == null) throw new ArgumentNullException(nameof(randomizer));
         if (words < 0) throw new ArgumentOutOfRangeException(nameof(words), "Number of words must be zero or more.");
-        if (startWithLoremIpsum && (words < 5)) throw new ArgumentOutOfRangeException(nameof(words), "If starting with 'lorem ipsum', at least five words are required.");
+        if (startWithLoremIpsum && (words < 5)) throw new ArgumentOutOfRangeException(nameof(words), "If starting with 'lorem ipsum', at least five words are required.");      
 
         if (words == 0)
         {
@@ -470,7 +472,7 @@ public static class RandomExtensions
         }
 
         StringBuilder result = new StringBuilder();
-        int remainingWords = words;
+        int remainingWords = words.Value;
         bool started = false;
 
         if (startWithLoremIpsum)

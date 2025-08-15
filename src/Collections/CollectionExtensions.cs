@@ -73,6 +73,127 @@ public static class CollectionExtensions
         => collection.AddRange((IEnumerable<T>)items);
 
     /// <summary>
+    /// Adds an item to the collection if it does not already exist in the collection.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the item will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="item">The item to add to the collection. Can be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the item was added, <see langword="false"/> if it already exists.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    public static bool AddIfNotExists<T>(this ICollection<T> collection, T item)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+
+        if (collection.Contains(item))
+        {
+            return false;
+        }
+
+        collection.Add(item);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds an item to the collection if it does not already exist in the collection.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the item will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="item">The item to add to the collection. Can be <see langword="null"/>.</param>
+    /// <param name="comparer">A comparer to use for checking existence. Cannot be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the item was added, <see langword="false"/> if it already exists.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static bool AddIfNotExists<T>(this ICollection<T> collection, T item, IEqualityComparer<T> comparer)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        if (collection.Contains(item, comparer))
+        {
+            return false;
+        }
+        
+        collection.Add(item);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds multiple items to the collection if they do not already exist.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
+    /// <returns>The number of items added. Could be zero.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
+    public static int AddIfNotExistsRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+        if (items is null) throw new ArgumentNullException(nameof(items));
+
+        var addedCount = 0;
+
+        foreach (var item in items)
+        {
+            if (collection.AddIfNotExists(item))
+            {
+                addedCount++;
+            }
+        }
+
+        return addedCount;
+    }
+
+    /// <summary>
+    /// Adds multiple items to the collection if they do not already exist.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
+    /// <param name="comparer">A comparer to use for checking existence. Cannot be <see langword="null"/>.</param>
+    /// <returns>The number of items added. Could be zero.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static int AddIfNotExistsRange<T>(this ICollection<T> collection, IEnumerable<T> items, IEqualityComparer<T> comparer)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+        if (items is null) throw new ArgumentNullException(nameof(items));
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        var addedCount = 0;
+
+        foreach (var item in items)
+        {
+            if (collection.AddIfNotExists(item, comparer))
+            {
+                addedCount++;
+            }
+        }
+
+        return addedCount;
+    }
+
+    /// <summary>
+    /// Adds multiple items to the collection if they do not already exist.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
+    /// <returns>The number of items added. Could be zero.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
+    public static int AddIfNotExistsRange<T>(this ICollection<T> collection, params T[] items)
+        => collection.AddIfNotExistsRange((IEnumerable<T>)items);
+
+    /// <summary>
+    /// Adds multiple items to the collection if they do not already exist.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
+    /// <param name="comparer">A comparer to use for checking existence. Cannot be <see langword="null"/>.</param>
+    /// <returns>The number of items added. Could be zero.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static int AddIfNotExistsRange<T>(this ICollection<T> collection, IEqualityComparer<T> comparer, params T[] items)
+        => collection.AddIfNotExistsRange((IEnumerable<T>)items, comparer);
+
+    /// <summary>
     /// Removes multiple items from the collection.
     /// </summary>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>

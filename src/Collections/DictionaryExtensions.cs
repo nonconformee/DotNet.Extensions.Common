@@ -277,4 +277,29 @@ public static class DictionaryExtensions
     /// langword="null"/>.</exception>
     public static bool AddIfNecessary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
         => AddIfNecessary(dictionary, key, typeof(TValue));
+
+    /// <summary>
+    /// Tries to get the value associated with the specified key and removes it from the dictionary if found.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <param name="dictionary">The dictionary to search.</param>
+    /// <param name="key">The key to look for.</param>
+    /// <param name="value">The value associated with the key, if found.</param>
+    /// <returns><see langword="true"/> if the key was found and the value was removed; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is <see langword="null"/>.</exception>
+    public static bool TryGetAndRemoveValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, out TValue? value)
+    {
+        if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
+        if (key is null) throw new ArgumentNullException(nameof(key));
+
+        if (dictionary.TryGetValue(key, out value))
+        {
+            dictionary.Remove(key);
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
 }
