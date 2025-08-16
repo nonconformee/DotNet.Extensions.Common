@@ -256,4 +256,64 @@ public static class LinkedListExtensions
             current = current.Previous;
         }
     }
+
+    /// <summary>
+    /// Finds all nodes in the linked list that match the specified value using the provided equality comparer.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to search. Cannot be <see langword="null"/>.</param>
+    /// <param name="value">The value to match against.</param>
+    /// <param name="equalityComparer">An optional equality comparer to use for the comparison.</param>
+    /// <returns>A list of all matching nodes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+    public static List<LinkedListNode<T>> FindAll<T>(this LinkedList<T> list, T value, IEqualityComparer<T>? equalityComparer = null)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+
+        equalityComparer ??= EqualityComparer<T>.Default;
+
+        var result = new List<LinkedListNode<T>>();
+        var current = list.First;
+
+        while (current is not null)
+        {
+            if (equalityComparer.Equals(current.Value, value))
+            {
+                result.Add(current);
+            }
+
+            current = current.Next;
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Finds all nodes in the linked list that match the specified predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the linked list.</typeparam>
+    /// <param name="list">The linked list to search. Cannot be <see langword="null"/>.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <returns>A list of all matching nodes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
+    public static List<LinkedListNode<T>> FindAll<T>(this LinkedList<T> list, Func<T, bool> predicate)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+        var result = new List<LinkedListNode<T>>();
+        var current = list.First;
+
+        while (current is not null)
+        {
+            if (predicate(current.Value))
+            {
+                result.Add(current);
+            }
+
+            current = current.Next;
+        }
+
+        return result;
+    }
 }

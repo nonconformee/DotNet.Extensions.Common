@@ -278,6 +278,29 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
+    /// Returns distinct elements from a sequence.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
+    /// <param name="equalityComparer">An optional equality comparer to compare elements. If <see langword="null"/>, the default equality comparer is used.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> containing only distinct elements.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> DistinctBy<T>(this IEnumerable<T> source, IEqualityComparer<T>? equalityComparer = null)
+    {
+        if (source is null) throw new ArgumentNullException(nameof(source));
+
+        var seenElements = new HashSet<T>(equalityComparer ?? EqualityComparer<T>.Default);
+
+        foreach (var element in source)
+        {
+            if (seenElements.Add(element))
+            {
+                yield return element;
+            }
+        }
+    }
+
+    /// <summary>
     /// Returns distinct elements from a sequence according to a specified key selector.
     /// </summary>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
@@ -362,7 +385,7 @@ public static class EnumerableExtensions
     /// <returns><see langword="true"/> if at least one object or the sequence itself was disposed, <see langword="false"/> otherwise.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
     /// <remarks>If <paramref name="includeSynchronous"/> is <see langword="true"/>, <see cref="IAsyncDisposable"/> is called befor <see cref="IDisposable"/>.</remarks>
-    public static async Task<bool> DisposeAllAsync<T>(this IEnumerable<T> sequence, bool? includeSynchronous = true)
+    public static async ValueTask<bool> DisposeAllAsync<T>(this IEnumerable<T> sequence, bool? includeSynchronous = true)
     {
         if (sequence is null) throw new ArgumentNullException(nameof(sequence));
 

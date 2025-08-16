@@ -1,6 +1,7 @@
 ﻿
 using nonconformee.DotNet.Extensions.Comparison;
 using nonconformee.DotNet.Extensions.Exceptions;
+using System;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
@@ -149,29 +150,39 @@ public static class ListExtensions
     }
 
     /// <summary>
-    /// Randomly rearranges the elements of the specified list in place.
+    /// Randomly mixes the elements of a sequence into the list.
     /// </summary>
-    /// <remarks>If a custom <see cref="Random"/> instance is provided, it will be used for generating random numbers; 
-    /// otherwise, a new instance is created internally.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
-    /// <param name="list">The list to be shuffled. Cannot be <see langword="null"/>.</param>
-    /// <param name="randomizer">An optional <see cref="Random"/> instance to use for generating random numbers.  If <see langword="null"/>, a
+    /// <param name="list">The list to be mixed into. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The sequence of items to mix into the list. Cannot be <see langword="null"/>.</param>
+    /// <param name="randomizer">An optional <see cref="Random"/> instance to use for generating random numbers. If <see langword="null"/>, a
     /// new instance of <see cref="Random"/> is created.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
-    public static void Mix<T> (this IList<T> list, Random? randomizer = null)
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
+    public static void MixWith<T> (this IList<T> list, IEnumerable<T> items, Random? randomizer = null)
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
+        if (items is null) throw new ArgumentNullException(nameof(items));
 
         randomizer ??= new Random();
 
-        int n = list.Count;
-
-        for (int i = 0; i < n; i++)
+        foreach (var item in items)
         {
-            int j = randomizer.Next(i, n);
-            (list[i], list[j]) = (list[j], list[i]);
+            int index = randomizer.Next(0, list.Count);
+            list.Insert(index, item);
         }
     }
+
+    /// <summary>
+    /// Randomly mixes the elements of a sequence into the list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list to be mixed into. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The sequence of items to mix into the list. Cannot be <see langword="null"/>.</param>
+    /// <param name="randomizer">An optional <see cref="Random"/> instance to use for generating random numbers. If <see langword="null"/>, a
+    /// new instance of <see cref="Random"/> is created.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
+    public static void MixWith<T>(this IList<T> list, Random? randomizer = null, params T[] items)
+        => list.Mix((IEnumerable<T>)items, randomizer);
 
     /// <summary>
     /// Picks a random item from the list.
@@ -374,6 +385,26 @@ public static class ListExtensions
         for (int i = 0; i < list.Count; i++)
         {
             list[i] = transform(list[i]);
+        }
+    }
+
+    /// <summary>
+    /// Applies a transformation function to each element in the specified list, replacing each element with the result of the transformation.
+    /// </summary>    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list whose elements will be transformed. Cannot be <see langword="null"/>.</param>
+    /// <param name="transform">A function that defines the transformation to apply to each element. Cannot be <see langword="null"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="transform"/> is <see langword="null"/>.</exception>
+    /// <remarks>This method modifies the original list by replacing each element with the result of the
+    /// <paramref name="transform"/> function. The transformation is applied in-place, and the list retains the same
+    /// number of elements.</remarks>
+    public static void Transform<T>(this IList<T> list, Func<T, int, T> transform)
+    {
+        if (list is null) throw new ArgumentNullException(nameof(list));
+        if (transform is null) throw new ArgumentNullException(nameof(transform));
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i] = transform(list[i], i);
         }
     }
 }

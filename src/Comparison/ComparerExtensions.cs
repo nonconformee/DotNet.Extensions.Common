@@ -20,7 +20,7 @@ public static class ComparerExtensions
     /// <typeparam name="T">The type of the objects to compare.</typeparam>
     /// <typeparam name="TKey">The type of the key used for the secondary comparison.</typeparam>
     /// <param name="first">The primary comparer to use for the initial comparison. Cannot be <see langword="null"/>.</param>
-    /// <param name="keySelector">A function to extract the key from an object for the secondary comparison. Cannot be <see langword="null"/.</param>
+    /// <param name="keySelector">A function to extract the key from an object for the secondary comparison. Cannot be <see langword="null"/>.</param>
     /// <returns>A comparer that first uses the <paramref name="first"/> comparer and, if the comparison results in equality,
     /// uses the key extracted by <paramref name="keySelector"/> for a secondary comparison.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="first"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
@@ -41,7 +41,7 @@ public static class ComparerExtensions
     /// </summary>
     /// <typeparam name="T">The type of the objects to compare.</typeparam>
     /// <typeparam name="TKey">The type of the key used for the secondary comparison.</typeparam>
-    /// <param name="first">The initial comparer used for the primary comparison. Cannot be <see langword="null"/.</param>
+    /// <param name="first">The initial comparer used for the primary comparison. Cannot be <see langword="null"/>.</param>
     /// <param name="keySelector">A function to extract the key for the secondary comparison. Cannot be <see langword="null"/>.</param>
     /// <returns>A comparer that first uses the <paramref name="first"/> comparer for the primary comparison  and then performs a
     /// descending comparison based on the key provided by <paramref name="keySelector"/>.</returns>
@@ -68,7 +68,7 @@ public static class ComparerExtensions
     /// <typeparam name="TKey">The type of the key used for the secondary comparison.</typeparam>
     /// <param name="first">The primary comparer to use for the initial comparison. Cannot be <see langword="null"/>.</param>>
     /// <param name="second">The secondary comparer to use for the initial comparison. Cannot be <see langword="null"/>.</param>
-    /// <param name="keySelector">A function to extract the key from an object for the secondary comparison. Cannot be <see langword="null"/.</param>
+    /// <param name="keySelector">A function to extract the key from an object for the secondary comparison. Cannot be <see langword="null"/>.</param>
     /// <returns>A comparer that first uses the <paramref name="first"/> comparer and, if the comparison results in equality,
     /// uses the key extracted by <paramref name="keySelector"/> for a secondary comparison.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="first"/>, <paramref name="second"/>, or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
@@ -95,7 +95,7 @@ public static class ComparerExtensions
     /// <typeparam name="TKey">The type of the key used for the secondary comparison.</typeparam>
     /// <param name="first">The primary comparer to use for the initial comparison. Cannot be <see langword="null"/>.</param>>
     /// <param name="second">The secondary comparer to use for the initial comparison. Cannot be <see langword="null"/>.</param>
-    /// <param name="keySelector">A function to extract the key from an object for the secondary comparison. Cannot be <see langword="null"/.</param>
+    /// <param name="keySelector">A function to extract the key from an object for the secondary comparison. Cannot be <see langword="null"/>.</param>
     /// <returns>A comparer that first uses the <paramref name="first"/> comparer and, if the comparison results in equality,
     /// uses the key extracted by <paramref name="keySelector"/> for a secondary comparison.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="first"/>, <paramref name="second"/>, or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
@@ -116,7 +116,7 @@ public static class ComparerExtensions
     /// Returns an <see cref="IComparer{T}"/> that reverses the sort order of the specified comparer.
     /// </summary>
     /// <typeparam name="T">The type of objects to compare.</typeparam>
-    /// <param name="comparer">The comparer whose sort order is to be reversed.</param>
+    /// <param name="comparer">The comparer whose sort order is to be reversed. Cannot be <see langword="null"/>.</param>
     /// <returns>An <see cref="IComparer{T}"/> that sorts in the opposite order of the specified <paramref name="comparer"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
     public static IComparer<T> Reverse<T>(this IComparer<T> comparer)
@@ -124,5 +124,48 @@ public static class ComparerExtensions
         if (comparer is null) throw new ArgumentNullException(nameof(comparer));
 
         return Comparer<T>.Create((x, y) => -comparer.Compare(x, y));
+    }
+
+    /// <summary>
+    /// Converts a comparison function to an <see cref="IComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to compare.</typeparam>
+    /// <param name="comparison">The delegate which can be used for comparison. Cannot be <see langword="null"/>.</param>
+    /// <returns>The comparer which uses the comparison function.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparison"/> is <see langword="null"/>.</exception>
+    public static IComparer<T> ToComparer<T>(this Func<T?, T?, int> comparison)
+    {
+        if (comparison is null) throw new ArgumentNullException(nameof(comparison));
+
+        return Comparer<T>.Create(new Comparison<T>(comparison));
+    }
+
+    /// <summary>
+    /// Converts an <see cref="IComparer{T}"/> to an <see cref="IEqualityComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to compare.</typeparam>
+    /// <param name="comparer">The comparer to use als equality comparer. Cannot be <see langword="null"/>.</param>
+    /// <returns>The equality comparer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>"
+    public static IEqualityComparer<T> ToEqualityComparer<T>(this IComparer<T> comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        return new ComparerEqualityComparer<T>(comparer);
+    }
+
+    public sealed class ComparerEqualityComparer<T>(
+        IComparer<T> _comparer)
+        : IEqualityComparer<T>
+    {
+        public bool Equals(T? x, T? y)
+        {
+            return _comparer.Compare(x, y) == 0;
+        }
+
+        public int GetHashCode(T? obj)
+        {
+            return obj?.GetHashCode() ?? 0;
+        }
     }
 }

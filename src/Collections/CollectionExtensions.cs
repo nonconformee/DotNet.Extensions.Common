@@ -16,7 +16,7 @@ public static class CollectionExtensions
     /// <typeparam name="T">The type of elements in the collection. Can be <see langword="null"/>.</typeparam>
     /// <param name="collection">The collection to test.</param>
     /// <returns><see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.</returns>
-    public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
+    public static bool IsNullOrEmpty<T>(this ICollection<T>? collection)
         => (collection is null || collection.Count == 0);
 
     /// <summary>
@@ -25,7 +25,7 @@ public static class CollectionExtensions
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to test.</param>
     /// <returns><see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
-    public static ICollection<T>? ToNullIfNullOrEmpty<T>(this ICollection<T> collection)
+    public static ICollection<T>? ToNullIfNullOrEmpty<T>(this ICollection<T>? collection)
         => (collection is null || collection.Count == 0) ? null : collection;
 
     /// <summary>
@@ -414,6 +414,7 @@ public static class CollectionExtensions
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to be recursively added to the collection. Can be <see langword="null"/>.</param>
+    /// <param name="addPredicate">An optional predicate to determine whether an item should be added to the collection. If not provided (or is <see langword="null"/> respectively), all items will be added.</param>
     /// <returns>The number of items added. Could be zero.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -421,7 +422,7 @@ public static class CollectionExtensions
     ///     If <paramref name="items"/> is of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and its items added."/>
     ///     If <paramref name="items"/> is a sequence of of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and each of its sequence is enumerated and its items added."/>
     /// </remarks>
-    public static int AddFlattened<T>(this ICollection<T> collection, object items)
+    public static int AddFlattened<T>(this ICollection<T> collection, object items, Func<ICollection<T>, object?, bool>? addPredicate = null)
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
 
@@ -430,14 +431,36 @@ public static class CollectionExtensions
             return 0;
         }
 
-        if(items is T singleInstance)
+        addPredicate ??= (_, _) => true;
+
+        if (items is T singleInstance)
         {
+            if(!addPredicate(collection, singleInstance))
+            {
+                return 0;
+            }
+
             collection.Add(singleInstance);
             return 1;
         }
         else if(items is IEnumerable<T> enumerable1)
         {
-            return collection.AddIfNotNullOrEmptyRange(enumerable1);
+            var added = 0;
+
+            foreach (var item in enumerable1)
+            {
+                if(!addPredicate(collection, item))
+                {
+                    continue;
+                }
+
+                if(collection.AddIfNotNullOrEmpty(item))
+                {
+                    added++;
+                }
+            }
+
+            return added;
         }
         else if(items is IEnumerable enumerable2)
         {
@@ -445,6 +468,11 @@ public static class CollectionExtensions
 
             foreach (var item in enumerable2)
             {
+                if (!addPredicate(collection, item))
+                {
+                    continue;
+                }
+
                 added += collection.AddFlattened(item);
             }
 
@@ -555,6 +583,43 @@ public static class CollectionExtensions
         if (slice.Count > 0)
         {
             result.Add([.. slice]);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Divides the elements of the specified collection into smaller lists based on a split predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to be divided. Cannot be <see langword="null"/>.</param>
+    /// <param name="splitPredicate">A function to determine whether an element should be the start of a new slice.</param>
+    /// <returns>A collection of lists, where each list contains elements from the original collection.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    public static ICollection<List<T>> Slice<T>(this ICollection<T> collection, Func<T, bool> splitPredicate)
+    {
+        if (collection is null) throw new ArgumentNullException(nameof(collection));
+        if (splitPredicate is null) throw new ArgumentNullException(nameof(splitPredicate));
+
+        var result = new List<List<T>>();
+        var slice = new List<T>();
+
+        foreach (var item in collection)
+        {
+            if (splitPredicate(item))
+            {
+                if (slice.Count > 0)
+                {
+                    result.AddRange(slice);
+                    slice.Clear();
+                }
+            }
+
+            slice.Add(item);
+        }
+        if (slice.Count > 0)
+        {
+            result.AddRange(slice);
         }
 
         return result;
