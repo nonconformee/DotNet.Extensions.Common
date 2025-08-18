@@ -346,6 +346,86 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
+    /// Returns the minimum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <typeparam name="TKey">The type of the selector.</typeparam>
+    /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
+    /// <param name="selector">The function which selects the value of an item which is then used for comparison. Cannot be <see langword="null"/>.</param>
+    /// <returns>The minimum element or <see langword="null"/> if the sequence is empty.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="selector"/> is <see langword="null"/>.</exception>
+    public static T? MinByOrDefault<T, TKey>(this IEnumerable<T> sequence, Func<T, TKey> selector)
+        where TKey : IComparable<TKey>
+    {
+        if (sequence == null) throw new ArgumentNullException(nameof(sequence));
+        if (selector == null) throw new ArgumentNullException(nameof(selector));
+
+        using var enumerator = sequence.GetEnumerator();
+        
+        if (!enumerator.MoveNext())
+        {
+             return default;
+        }
+
+        T minElement = enumerator.Current;
+        TKey minValue = selector(minElement);
+
+        while (enumerator.MoveNext())
+        {
+            var candidate = enumerator.Current;
+            var candidateValue = selector(candidate);
+
+            if (candidateValue.CompareTo(minValue) < 0)
+            {
+                minElement = candidate;
+                minValue = candidateValue;
+            }
+        }
+
+        return minElement;
+    }
+
+    /// <summary>
+    /// Returns the maximum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <typeparam name="TKey">The type of the selector.</typeparam>
+    /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
+    /// <param name="selector">The function which selects the value of an item which is then used for comparison. Cannot be <see langword="null"/>.</param>
+    /// <returns>The maximum element or <see langword="null"/> if the sequence is empty.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="selector"/> is <see langword="null"/>.</exception>
+    public static T? MaxByOrDefault<T, TKey>(this IEnumerable<T> sequence, Func<T, TKey> selector)
+        where TKey : IComparable<TKey>
+    {
+        if (sequence == null) throw new ArgumentNullException(nameof(sequence));
+        if (selector == null) throw new ArgumentNullException(nameof(selector));
+
+        using var enumerator = sequence.GetEnumerator();
+
+        if (!enumerator.MoveNext())
+        {
+            return default;
+        }
+
+        T maxElement = enumerator.Current;
+        TKey maxValue = selector(maxElement);
+
+        while (enumerator.MoveNext())
+        {
+            var candidate = enumerator.Current;
+            var candidateValue = selector(candidate);
+
+            if (candidateValue.CompareTo(maxValue) > 0)
+            {
+                maxElement = candidate;
+                maxValue = candidateValue;
+            }
+        }
+
+        return maxElement;
+    }
+
+    /// <summary>
     /// Disposes all <see cref="IDisposable"/> objects within the sequence and optionally the sequence implementation itself if it implements <see cref="IDisposable"/>.
     /// </summary>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
