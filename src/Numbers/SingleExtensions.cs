@@ -15,9 +15,7 @@ public static class SingleExtensions
     /// <param name="value">The single-precision floating-point value to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is not a number (NaN); otherwise, <see langword="false"/>.</returns>
     public static bool IsNaN(this float value)
-    {
-        return float.IsNaN(value);
-    }
+        => float.IsNaN(value);
 
     /// <summary>
     /// Determines whether the specified single-precision floating-point number evaluates to positive or negative
@@ -28,9 +26,7 @@ public static class SingleExtensions
     /// <returns><see langword="true"/> if <paramref name="value"/> is positive infinity or negative infinity; otherwise, <see
     /// langword="false"/>.</returns>
     public static bool IsInfinity(this float value)
-    {
-        return float.IsInfinity(value);
-    }
+        => float.IsInfinity(value);
 
     /// <summary>
     /// Determines whether the specified single-precision floating-point number is a finite value.
@@ -38,9 +34,7 @@ public static class SingleExtensions
     /// <param name="value">The single-precision floating-point number to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is a finite number; otherwise, <see langword="false"/>.</returns>
     public static bool IsFinite(this float value)
-    {
-        return !float.IsNaN(value) && !float.IsInfinity(value);
-    }
+        => !float.IsNaN(value) && !float.IsInfinity(value);
 
     /// <summary>
     /// Determines whether the specified single-precision floating-point number evaluates to negative infinity.
@@ -48,9 +42,7 @@ public static class SingleExtensions
     /// <param name="value">The single-precision floating-point number to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is negative infinity; otherwise, <see langword="false"/>.</returns>
     public static bool IsNegativeInfinity(this float value)
-    {
-        return float.IsNegativeInfinity(value);
-    }
+        => float.IsNegativeInfinity(value);
 
     /// <summary>
     /// Determines whether the specified single-precision floating-point number evaluates to positive infinity.
@@ -58,7 +50,5 @@ public static class SingleExtensions
     /// <param name="value">The single-precision floating-point number to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is positive infinity; otherwise, <see langword="false"/>.</returns>
     public static bool IsPositiveInfinity(this float value)
-    {
-        return float.IsPositiveInfinity(value);
-    }
+        => float.IsPositiveInfinity(value);
 }

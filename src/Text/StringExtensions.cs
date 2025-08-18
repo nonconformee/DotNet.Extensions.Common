@@ -8,7 +8,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The strimong to test.</param>
     /// <returns><see langword="null"/> if the string is <see langword="null"/> or empty, otherwise returns the original string.</returns>
-    public static string? NullIfEmpty(this string? value)
+    public static string? NullIfNullOrEmpty(this string? value)
         => string.IsNullOrEmpty(value) ? null : value;
 
     /// <summary>
@@ -16,55 +16,24 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to test.</param>
     /// <returns><see langword="null"/> if the string is <see langword="null"/> or consists only of whitespace, otherwise returns the original string.</returns>
-    public static string? NullIfWhiteSpace(this string? value)
+    public static string? NullIfNullOrWhiteSpace(this string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value;
 
     /// <summary>
-    /// Returns <see langword="null"/> if the string is <see langword="null"/>, empty, or consists only of whitespace, otherwise returns the original string.
+    /// Returns an empty string if the string is <see langword="null"/> or empty, otherwise returns the original string.
     /// </summary>
     /// <param name="value">The string to test.</param>
-    /// <returns><see langword="null"/> if the string is <see langword="null"/>, empty, or consists only of whitespace.</returns>
-    public static string? NullIfNullOrEmpty(this string? value)
-    {
-        return value switch
-        {
-            null => null,
-            "" => null,
-            _ => value
-        };
-    }
+    /// <returns>An empty string if the string is <see langword="null"/> or empty, otherwise returns the original string.</returns>
+    public static string EmptyIfNullOrEmpty(this string? value)
+        => string.IsNullOrEmpty(value) ? string.Empty : value;
 
     /// <summary>
-    /// Returns <see langword="null"/> if the string is <see langword="null"/>, empty, or consists only of whitespace, otherwise returns the original string.
+    /// Returns an empty string if the string is <see langword="null"/> or consists only of whitespace, otherwise returns the original string.
     /// </summary>
     /// <param name="value">The string to test.</param>
-    /// <returns><see langword="null"/> if the string is <see langword="null"/>, empty, or consists only of whitespace, otherwise returns the original string.</returns>
-    public static string? NullIfNullOrWhiteSpace(this string? value)
-    {
-        return value switch
-        {
-            null => null,
-            "" => null,
-            _ when string.IsNullOrWhiteSpace(value) => null,
-            _ => value
-        };
-    }
-
-    /// <summary>
-    /// Returns <see langword="null"/> if the string is <see langword="null"/>, empty, or consists only of whitespace, otherwise returns the original string.
-    /// </summary>
-    /// <param name="value">The string to test.</param>
-    /// <returns><see langword="null"/> if the string is <see langword="null"/>, empty, or consists only of whitespace, otherwise returns the original string.</returns>
-    public static string? NullIfNullOrEmptyOrWhiteSpace(this string? value)
-    {
-        return value switch
-        {
-            null => null,
-            "" => null,
-            _ when string.IsNullOrWhiteSpace(value) => null,
-            _ => value
-        };
-    }
+    /// <returns>An empty string if the string is <see langword="null"/> or consists only of whitespace, otherwise returns the original string.</returns>
+    public static string EmptyIfNullOrWhiteSpace(this string? value)
+        => string.IsNullOrWhiteSpace(value) ? string.Empty : value;
 
     /// <summary>
     /// Reverses the characters in the string.

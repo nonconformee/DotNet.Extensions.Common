@@ -15,9 +15,7 @@ public static class DoubleExtensions
     /// <param name="value">The double-precision floating-point value to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is not a number (NaN); otherwise, <see langword="false"/>.</returns>
     public static bool IsNaN(this double value)
-    {
-        return double.IsNaN(value);
-    }
+        => double.IsNaN(value);
 
     /// <summary>
     /// Determines whether the specified double-precision floating-point number evaluates to positive or negative
@@ -28,9 +26,7 @@ public static class DoubleExtensions
     /// <returns><see langword="true"/> if <paramref name="value"/> is positive infinity or negative infinity; otherwise, <see
     /// langword="false"/>.</returns>
     public static bool IsInfinity(this double value)
-    {
-        return double.IsInfinity(value);
-    }
+        => double.IsInfinity(value);
 
     /// <summary>
     /// Determines whether the specified double-precision floating-point number is a finite value.
@@ -38,9 +34,7 @@ public static class DoubleExtensions
     /// <param name="value">The double-precision floating-point number to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is a finite number; otherwise, <see langword="false"/>.</returns>
     public static bool IsFinite(this double value)
-    {
-        return !double.IsNaN(value) && !double.IsInfinity(value);
-    }
+        => !double.IsNaN(value) && !double.IsInfinity(value);
 
     /// <summary>
     /// Determines whether the specified double-precision floating-point number evaluates to negative infinity.
@@ -48,9 +42,7 @@ public static class DoubleExtensions
     /// <param name="value">The double-precision floating-point number to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is negative infinity; otherwise, <see langword="false"/>.</returns>
     public static bool IsNegativeInfinity(this double value)
-    {
-        return double.IsNegativeInfinity(value);
-    }
+        => double.IsNegativeInfinity(value);
 
     /// <summary>
     /// Determines whether the specified double-precision floating-point number evaluates to positive infinity.
@@ -58,7 +50,5 @@ public static class DoubleExtensions
     /// <param name="value">The double-precision floating-point number to evaluate.</param>
     /// <returns><see langword="true"/> if <paramref name="value"/> is positive infinity; otherwise, <see langword="false"/>.</returns>
     public static bool IsPositiveInfinity(this double value)
-    {
-        return double.IsPositiveInfinity(value);
-    }
+        => double.IsPositiveInfinity(value);
 }
