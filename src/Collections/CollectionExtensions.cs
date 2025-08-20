@@ -564,7 +564,8 @@ public static class CollectionExtensions
     public static ICollection<List<T>> Slice<T>(this ICollection<T> collection, int sliceSize)
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
-        sliceSize.ThrowIfArgumentIsOutOfRange(1, int.MaxValue);
+        if (sliceSize <= 0) throw new ArgumentOutOfRangeException(nameof(sliceSize), "Slice size must be greater than or equal to 1.");
+        if (sliceSize > collection.Count) throw new ArgumentOutOfRangeException(nameof(sliceSize), "Slice size must be less than or equal to the collection size.");
 
         var result = new List<List<T>>();
         var slice = new List<T>();

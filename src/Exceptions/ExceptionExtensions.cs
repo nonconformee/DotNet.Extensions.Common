@@ -75,5 +75,25 @@ public static class ExceptionExtensions
         return $"{exception.GetType().Name}:{Environment.NewLine}{exception.GetFullMessage()}{Environment.NewLine}Stack Trace:{Environment.NewLine}{exception.GetFullStackTrace()}";
     }
 
-    // TODO GetAllExceptions
+    /// <summary>
+    /// Retrieves a list of all exceptions in the chain, starting from the provided exception and including all inner exceptions.
+    /// </summary>
+    /// <param name="exception">The exception. Cannot be <see langword="null"/>.</param>
+    /// <returns>A list of all exceptions in the chain.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
+    public static List<Exception> GetAllExceptions(this Exception exception)
+    {
+        if (exception is null) throw new ArgumentNullException(nameof(exception));
+
+        var exceptions = new List<Exception> { exception };
+        var innerException = exception.InnerException;
+
+        while (innerException != null)
+        {
+            exceptions.Add(innerException);
+            innerException = innerException.InnerException;
+        }
+
+        return exceptions;
+    }
 }
