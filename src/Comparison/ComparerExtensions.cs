@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using System.Collections;
 
 namespace nonconformee.DotNet.Extensions.Comparison;
 
@@ -11,6 +8,92 @@ namespace nonconformee.DotNet.Extensions.Comparison;
 /// </summary>
 public static class ComparerExtensions
 {
+    /// <summary>
+    /// Converts a non-generic <see cref="IComparer"/> to a generic <see cref="IComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the objects to compare.</typeparam>
+    /// <param name="comparer">The comparer.</param>
+    /// <returns>The generic comparer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static IComparer<T> ToGeneric<T> (this IComparer comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        if (comparer is IComparer<T> genericComparer)
+        {
+            return genericComparer;
+        }
+
+        return Comparer<T>.Create((x,y ) =>
+        {
+            if (x is null && y is null) return 0;
+            if (x is null) return -1;
+            if (y is null) return 1;
+            return comparer.Compare(x, y);
+        });
+    }
+
+    /// <summary>
+    /// Converts a generic <see cref="IComparer{T}"/> to a non-generic <see cref="IComparer"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the objects to compare.</typeparam>
+    /// <param name="comparer">The comparer.</param>
+    /// <returns>The non-generic comparer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static IComparer ToNonGeneric<T>(this IComparer<T> comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        if (comparer is IComparer nonGenericComparer)
+        {
+            return nonGenericComparer;
+        }
+
+        return Comparer<T>.Create(comparer.Compare);
+    }
+
+    /// <summary>
+    /// Converts a comparison function to an <see cref="IComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to compare.</typeparam>
+    /// <param name="comparison">The delegate which can be used for comparison. Cannot be <see langword="null"/>.</param>
+    /// <returns>The comparer which uses the comparison function.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparison"/> is <see langword="null"/>.</exception>
+    public static IComparer<T> ToComparer<T>(this Func<T?, T?, int> comparison)
+    {
+        if (comparison is null) throw new ArgumentNullException(nameof(comparison));
+
+        return Comparer<T>.Create(new Comparison<T>(comparison));
+    }
+
+    /// <summary>
+    /// Converts an <see cref="IComparer{T}"/> to a function that compares two objects.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to compare.</typeparam>
+    /// <param name="comparer">The comparer to convert into a comparison function. Cannot be <see langword="null"/>.</param>
+    /// <returns>The comparison function.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static Func<T, T, int> ToComparerFunc<T>(this IComparer<T> comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        return (x, y) => comparer.Compare(x, y);
+    }
+
+    /// <summary>
+    /// Converts an <see cref="IComparer{T}"/> to an <see cref="IEqualityComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to compare.</typeparam>
+    /// <param name="comparer">The comparer to use als equality comparer. Cannot be <see langword="null"/>.</param>
+    /// <returns>The equality comparer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>"
+    public static IEqualityComparer<T> ToEqualityComparer<T>(this IComparer<T> comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        return new ComparerEqualityComparer<T>(comparer);
+    }
+
     /// <summary>
     /// Creates a composite comparer that performs a secondary comparison using the specified key selector when theprimary comparer results in equality.
     /// </summary>
@@ -124,48 +207,6 @@ public static class ComparerExtensions
         if (comparer is null) throw new ArgumentNullException(nameof(comparer));
 
         return Comparer<T>.Create((x, y) => -comparer.Compare(x, y));
-    }
-
-    /// <summary>
-    /// Converts a comparison function to an <see cref="IComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The type of objects to compare.</typeparam>
-    /// <param name="comparison">The delegate which can be used for comparison. Cannot be <see langword="null"/>.</param>
-    /// <returns>The comparer which uses the comparison function.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="comparison"/> is <see langword="null"/>.</exception>
-    public static IComparer<T> ToComparer<T>(this Func<T?, T?, int> comparison)
-    {
-        if (comparison is null) throw new ArgumentNullException(nameof(comparison));
-
-        return Comparer<T>.Create(new Comparison<T>(comparison));
-    }
-
-    /// <summary>
-    /// Converts an <see cref="IComparer{T}"/> to a function that compares two objects.
-    /// </summary>
-    /// <typeparam name="T">The type of objects to compare.</typeparam>
-    /// <param name="comparer">The comparer to convert into a comparison function. Cannot be <see langword="null"/>.</param>
-    /// <returns>The comparison function.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
-    public static Func<T, T, int> ToComparerFunc<T>(this IComparer<T> comparer)
-    {
-        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
-
-        return (x, y) => comparer.Compare(x, y);
-    }
-
-    /// <summary>
-    /// Converts an <see cref="IComparer{T}"/> to an <see cref="IEqualityComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The type of objects to compare.</typeparam>
-    /// <param name="comparer">The comparer to use als equality comparer. Cannot be <see langword="null"/>.</param>
-    /// <returns>The equality comparer.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>"
-    public static IEqualityComparer<T> ToEqualityComparer<T>(this IComparer<T> comparer)
-    {
-        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
-
-        return new ComparerEqualityComparer<T>(comparer);
     }
 
     private sealed class ComparerEqualityComparer<T>(

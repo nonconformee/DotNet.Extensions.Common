@@ -1,11 +1,43 @@
 ﻿
+using System.Reflection;
+
 namespace nonconformee.DotNet.Extensions.Data;
 
 /// <summary>
-/// Provides extension methods for <see cref="IQueryable{T}"/>.
+/// Provides extension methods for <see cref="IQueryable{T}"/> and <see cref="IQueryable"/>.
 /// </summary>
 public static class QueryableExtensions
 {
+    /// <summary>
+    /// Converts an <see cref="IQueryable"/> to a generic <see cref="IQueryable{T}"/> with the specified element type.
+    /// </summary>
+    /// <param name="queryable">The query.</param>
+    /// <param name="elementType">The type of elements being queried.</param>
+    /// <returns>The generic <see cref="IQueryable{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="queryable"/> or <paramref name="elementType"/> is <see langword="null"/>.</exception>
+    public static IQueryable ToGeneric(this IQueryable queryable, Type elementType)
+    {
+        if (queryable == null) throw new ArgumentNullException(nameof(queryable));
+        if (elementType == null) throw new ArgumentNullException(nameof(elementType));
+
+        var castMethod = typeof(Queryable)
+            .GetMethod(nameof(Queryable.Cast), BindingFlags.Static | BindingFlags.Public)!
+            .MakeGenericMethod(elementType);
+
+        var result = castMethod.Invoke(null, new object[] { queryable });
+        return (IQueryable)result!;
+    }
+
+    /// <summary>
+    /// Converts an <see cref="IQueryable"/> to a generic <see cref="IQueryable{T}"/> with the specified element type.
+    /// </summary>
+    /// <typeparam name="T">The type of elements being queried.</typeparam>
+    /// <param name="queryable">The query.</param>
+    /// <returns>The generic <see cref="IQueryable{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="queryable"/> is <see langword="null"/>.</exception>
+    public static IQueryable<T> ToGeneric<T>(this IQueryable queryable)
+        => queryable.Cast<T>();
+
     /// <summary>
     /// Limits the query result to a specific page, if pagination is used.
     /// </summary>

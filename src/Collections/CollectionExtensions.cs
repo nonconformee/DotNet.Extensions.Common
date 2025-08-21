@@ -13,15 +13,18 @@ public static class CollectionExtensions
     /// <summary>
     /// Returns <see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.
     /// </summary>
+    /// <remarks>This method is useful for checking if a collection has no elements before performing operations on it.</remarks>
     /// <typeparam name="T">The type of elements in the collection. Can be <see langword="null"/>.</typeparam>
     /// <param name="collection">The collection to test.</param>
     /// <returns><see langword="true"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <see langword="false"/> otherwise.</returns>
+    /// 
     public static bool IsNullOrEmpty<T>(this ICollection<T>? collection)
         => (collection is null || collection.Count == 0);
 
     /// <summary>
     /// Returns <see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection.
     /// </summary>
+    /// <remarks>This method is useful for avoiding empty collections.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to test.</param>
     /// <returns><see langword="null"/> if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
@@ -31,6 +34,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Returns an empty collection if <paramref name="collection"/> is <see langword="null"/> or an empty collection.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection is never <see langword="null"/> or empty, which can simplify code that operates on collections.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to test.</param>
     /// <returns>An empty collection if <paramref name="collection"/> is <see langword="null"/> or an empty collection, <paramref name="collection"/> otherwise.</returns>
@@ -40,6 +44,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection.
     /// </summary>
+    /// <remarks>This method is useful for adding a range of items to a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -64,6 +69,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection.
     /// </summary>
+    /// <remarks>This method is useful for adding a range of items to a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -75,6 +81,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds an item to the collection if it does not already exist in the collection.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection contains unique items.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the item will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="item">The item to add to the collection. Can be <see langword="null"/>.</param>
@@ -96,6 +103,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds an item to the collection if it does not already exist in the collection.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection contains unique items.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the item will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="item">The item to add to the collection. Can be <see langword="null"/>.</param>
@@ -119,6 +127,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection if they do not already exist.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection contains unique items.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -145,6 +154,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection if they do not already exist.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection contains unique items.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -173,6 +183,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection if they do not already exist.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection contains unique items.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -184,6 +195,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection if they do not already exist.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a collection contains unique items.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -196,6 +208,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes multiple items from the collection.
     /// </summary>
+    /// <remarks>This method is useful for removing a range of items from a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection from which the items will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to remove from the collection. Cannot be <see langword="null"/>.</param>
@@ -222,6 +235,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes multiple items from the collection.
     /// </summary>
+    /// <remarks>This method is useful for removing a range of items from a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection from which the items will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to remove from the collection. Cannot be <see langword="null"/>.</param>
@@ -233,6 +247,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all occurences of an item from the collection.
     /// </summary>
+    /// <remarks>This method is useful for removing all instances of a specific item from a collection.</remarks>
     /// <typeparam name="T"></typeparam>
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="item">The item to remove. Can be <see langword="null"/></param>
@@ -255,6 +270,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all occurences of multiple items from the collection.
     /// </summary>
+    /// <remarks>This method is useful for removing all instances of specific items from a collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="items">The items to remove. Cannot be <see langword="null"/></param>
@@ -278,6 +294,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all occurences of multiple items from the collection.
     /// </summary>
+    /// <remarks>This method is useful for removing all instances of specific items from a collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="items">The items to remove. Cannot be <see langword="null"/></param>
@@ -289,6 +306,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all elements matching the given predicate from the collection.
     /// </summary>
+    /// <remarks>This method is useful for removing elements from a collection based on a specific condition.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection"> The collection from which elements will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="predicate">The predicate to match elements for removal. Cannot be <see langword="null"/>.</param>
@@ -312,6 +330,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all elements matching the given element using the given equality comparer.
     /// </summary>
+    /// <remarks>This method is useful for removing elements from a collection based on a specific condition.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection"> The collection from which elements will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="element">The element to match for removal. Can be <see langword="null"/>.</param>
@@ -336,6 +355,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds an item to the collection if the item is not <see langword="null"/>.
     /// </summary>
+    /// <remarks>This method is useful for conditionally adding items to a collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
     /// <param name="item">The item to test and add. Can be <see langword="null"/>.</param>
@@ -358,6 +378,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds a sequence of items to the collection if the sequence is not <see langword="null"/> and contains elements.
     /// </summary>
+    /// <remarks>This method is useful for conditionally adding multiple items to a collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence to test and add. Can be <see langword="null"/>.</param>
@@ -399,11 +420,12 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds a sequence of items to the collection if the sequence is not <see langword="null"/> and contains elements.
     /// </summary>
+    /// <remarks>This method is useful for adding a range of items to a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence to test and add. Can be <see langword="null"/>.</param>
     /// <returns>The number of items added. Could be zero.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/>vis <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     /// <remarks>Items in <paramref name="items"/> which are <see langword="null"/> itself will also not be added.</remarks>
     public static int AddIfNotNullOrEmptyRange<T>(this ICollection<T> collection, params T[] items)
         => collection.AddIfNotNullOrEmptyRange<T>((IEnumerable<T>) items);
@@ -411,17 +433,17 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds a recursive sequence of elements to the collection.
     /// </summary>
+    /// <remarks>
+    ///     If <paramref name="items"/> is of type <typeparamref name="T"/>, <paramref name="items"/> is added as a single item.
+    ///     If <paramref name="items"/> is of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and its items added."/>
+    ///     If <paramref name="items"/> is a sequence of of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and each of its sequence is enumerated and its items added."/>
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to be recursively added to the collection. Can be <see langword="null"/>.</param>
     /// <param name="addPredicate">An optional predicate to determine whether an item should be added to the collection. If not provided (or is <see langword="null"/> respectively), all items will be added.</param>
     /// <returns>The number of items added. Could be zero.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    /// <remarks>
-    ///     If <paramref name="items"/> is of type <typeparamref name="T"/>, <paramref name="items"/> is added as a single item.
-    ///     If <paramref name="items"/> is of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and its items added."/>
-    ///     If <paramref name="items"/> is a sequence of of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and each of its sequence is enumerated and its items added."/>
-    /// </remarks>
     public static int AddFlattened<T>(this ICollection<T> collection, object items, Func<ICollection<T>, object?, bool>? addPredicate = null)
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
@@ -487,16 +509,16 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds a recursive sequence of elements to the collection.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the collection.</typeparam>
-    /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
-    /// <param name="items">The sequence to be recursively added to the collection. Can be <see langword="null"/>.</param>
-    /// <returns>The number of items added. Could be zero.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     /// <remarks>
     ///     If <paramref name="items"/> is of type <typeparamref name="T"/>, <paramref name="items"/> is added as a single item.
     ///     If <paramref name="items"/> is of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and its items added."/>
     ///     If <paramref name="items"/> is a sequence of of type <see cref="IEnumerable{T}"/>, <paramref name="items"/> is enumerated and each of its sequence is enumerated and its items added."/>
     /// </remarks>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The sequence to be recursively added to the collection. Can be <see langword="null"/>.</param>
+    /// <returns>The number of items added. Could be zero.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     public static int AddFlattened<T>(this ICollection<T> collection, params object[] items)
         => collection.AddFlattened<T>((IEnumerable)items);
 
@@ -686,6 +708,7 @@ public static class CollectionExtensions
     /// If <paramref name="includeUniques"/> is <see langword="false"/>, only lists with more than one element are
     /// included.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><typeparamref name="TKey"/> is not a non-nullable type.</exception>"
     public static ICollection<List<T>> FindDuplicates<T, TKey>(this ICollection<T> collection, Func<T, TKey> keySelector, bool includeUniques = false, IEqualityComparer<TKey>? equalityComparer = null)
         where TKey : notnull
     {

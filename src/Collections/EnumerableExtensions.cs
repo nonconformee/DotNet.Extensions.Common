@@ -7,6 +7,7 @@ using System.Drawing;
 namespace nonconformee.DotNet.Extensions.Collections;
 
 // TODO : Ensure all default values are documented.
+// TODO : Ensure all exceptions are documented.
 
 /// <summary>
 /// Provides extension methods for <see cref="IEnumerable{T}"/>.
@@ -14,8 +15,36 @@ namespace nonconformee.DotNet.Extensions.Collections;
 public static class EnumerableExtensions
 {
     /// <summary>
+    /// Converts a non-generic <see cref="IEnumerable"/> sequence to a generic <see cref="IEnumerable{T}"/> sequence.
+    /// </summary>
+    /// <remarks>This method is useful for working with non-generic collections in a type-safe manner.</remarks>
+    /// <typeparam name="T">The type to which the elements of the sequence should be cast.</typeparam>
+    /// <param name="sequence">The non-generic sequence to convert. Cannot be <see langword="null"/>.</param>
+    /// <returns>A generic <see cref="IEnumerable{T}"/> containing the elements of the input sequence cast to type <typeparamref
+    /// name="T"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sequence"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidCastException">Thrown if an element in the sequence cannot be cast to type <typeparamref name="T"/>.</exception>
+    public static IEnumerable<T> ToGeneric<T>(this IEnumerable sequence)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+
+        foreach (var item in sequence)
+        {
+            if (item is T typedItem)
+            {
+                yield return typedItem;
+            }
+            else
+            {
+                throw new InvalidCastException($"Cannot cast item of type {item.GetType()} to {typeof(T)}.");
+            }
+        }
+    }
+
+    /// <summary>
     /// Ensures that a sequence is never <see langword="null"/> by returning an empty sequence if the input is <see langword="null"/>.
     /// </summary>
+    /// <remarks>This method is useful for avoiding null reference exceptions when working with sequences.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence to check for <see langword="null"/>. Can be <see langword="null"/>.</param>
     /// <returns>The original sequence if it is not <see langword="null"/>; otherwise, an empty sequence of type <typeparamref name="T"/>.</returns>
@@ -25,6 +54,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Performs the specified action on each element of the sequence.
     /// </summary>
+    /// <remarks>This method is useful for performing side effects for each element in a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence of elements to iterate over. Cannot be <see langword="null"/>.</param>
     /// <param name="action">The action to perform on each element. Cannot be <see langword="null"/>.</param>
@@ -36,6 +66,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Performs the specified action on each element of the sequence.
     /// </summary>
+    /// <remarks>This method is useful for performing side effects for each element in a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence of elements to iterate over. Cannot be <see langword="null"/>.</param>
     /// <param name="action">The action to perform on each element. The action receives the elements and their zero-based index. Cannot be <see langword="null"/>.</param>
@@ -60,6 +91,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Prepends the specified items to the beginning of the given sequence.
     /// </summary>
+    /// <remarks>This method is useful for adding items to the start of a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to which the items will be prepended. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to prepend to the sequence. Cannot be <see langword="null"/>.</param>
@@ -84,6 +116,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Prepends the specified items to the beginning of the given sequence.
     /// </summary>
+    /// <remarks>This method is useful for adding items to the start of a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to which the items will be prepended. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to prepend to the sequence. Cannot be <see langword="null"/>.</param>
@@ -95,6 +128,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Appends the specified items to the end of the given sequence.
     /// </summary>
+    /// <remarks>This method is useful for adding items to the end of a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to which the items will be appended. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to append to the sequence. Cannot be <see langword="null"/>.</param>
@@ -119,6 +153,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Appends the specified items to the end of the given sequence.
     /// </summary>
+    /// <remarks>This method is useful for adding items to the end of a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to which the items will be appended. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to append to the sequence. Cannot be <see langword="null"/>.</param>
@@ -130,6 +165,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns a sequence that excludes the specified items from the original sequence.
     /// </summary>
+    /// <remarks>This method is useful for filtering out unwanted elements from a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to filter. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to exclude from the sequence. Cannot be <see langword="null"/>.</param>
@@ -157,6 +193,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns a sequence that excludes the specified items from the original sequence.
     /// </summary>
+    /// <remarks>This method is useful for filtering out unwanted elements from a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to filter. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to exclude from the sequence. Cannot be <see langword="null"/>.</param>
@@ -169,13 +206,13 @@ public static class EnumerableExtensions
     /// <summary>
     /// Combines two sequences into a single sequence by interleaving their elements in random order.
     /// </summary>
+    /// <remarks>Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
     /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="random">An optional <see cref="Random"/> instance used to determine the interleaving order. If <see langword="null"/>, a new instance of <see cref="Random"/> is created.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> that yields elements from both <paramref name="sequence"/> and  <paramref name="items"/> in random order until both sequences are fully enumerated.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
-    /// <remarks>Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// Therefore, the resulting sequence returns elements with a chance of 50% from either of those, until the first sequence is finished, where the remaining elements of the other sequence are returned as they are enumerated in the corresponding sequence.</remarks>
     public static IEnumerable<T> Mix<T>(this IEnumerable<T> sequence, IEnumerable<T> items, Random? random = null)
     {
@@ -234,13 +271,13 @@ public static class EnumerableExtensions
     /// <summary>
     /// Combines two sequences into a single sequence by interleaving their elements in random order.
     /// </summary>
+    /// <remarks>Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
     /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="random">An optional <see cref="Random"/> instance used to determine the interleaving order. If <see langword="null"/>, a new instance of <see cref="Random"/> is created.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> that yields elements from both <paramref name="sequence"/> and  <paramref name="items"/> in random order until both sequences are fully enumerated.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
-    /// <remarks>Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// Therefore, the resulting sequence returns elements with a chance of 50% from either of those, until the first sequence is finished, where the remaining elements of the other sequence are returned as they are enumerated in the corresponding sequence.</remarks>
     public static IEnumerable<T> Mix<T>(this IEnumerable<T> sequence, Random? random = null, params T[] items)
         => sequence.Mix((IEnumerable<T>)items, random);
@@ -248,6 +285,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Divides a sequence into smaller batches of a specified size.
     /// </summary>
+    /// <remarks>This method is useful for processing large sequences in smaller chunks.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence to be divided into batches. Cannot be <see langword="null"/>.</param>
     /// <param name="batchSize">The maximum number of elements in each batch. Must be greater than 0.</param>
@@ -280,6 +318,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns distinct elements from a sequence.
     /// </summary>
+    /// <remarks>This method is useful to find duplicates in a sequence</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
     /// <param name="equalityComparer">An optional equality comparer to compare elements. If <see langword="null"/>, the default equality comparer is used.</param>
@@ -303,6 +342,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns distinct elements from a sequence according to a specified key selector.
     /// </summary>
+    /// <remarks>This method is useful for finding duplicates in a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of key to distinguish elements.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
@@ -329,6 +369,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns an enumerable that allows peeking at the first element of the sequence without consuming it.
     /// </summary>
+    /// <remarks>This method is useful for examining the first element of a sequence without modifying the original enumerator.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence to peek into. Cannot be <see langword="null"/>.</param>
     /// <param name="firstElement">When this method returns, contains the first element of the sequence if it exists; otherwise, <see langword="null"/> if the sequence is empty.</param>
@@ -348,6 +389,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns the minimum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
     /// </summary>
+    /// <remarks>This method is useful for finding the ''smallest'' element in a sequence based on a specific criterion.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of the selector.</typeparam>
     /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
@@ -388,6 +430,7 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns the maximum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
     /// </summary>
+    /// <remarks>This method is useful for finding the ''largest'' element in a sequence based on a specific criterion.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of the selector.</typeparam>
     /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
