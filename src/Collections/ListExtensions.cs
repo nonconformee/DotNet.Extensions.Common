@@ -13,6 +13,8 @@ public static class ListExtensions
     /// <summary>
     /// Inserts multiple items to the list at the specified index.
     /// </summary>
+    /// <remarks>This method inserts each item from the specified collection into the list at the specified index.
+    /// The items are added to the list in the order they appear in the collection. Therefore, the items at and after <paramref name="index"/> are pushed to the end of the list by the number of items in <paramref name="items"/>.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list to which the items will be inserted. Cannot be <see langword="null"/>.</param>
     /// <param name="index">Zero-based index at which the items will be inserted.</param>
@@ -34,6 +36,8 @@ public static class ListExtensions
     /// <summary>
     /// Inserts multiple items to the list at the specified index.
     /// </summary>
+    /// <remarks>This method inserts each item from the specified collection into the list at the specified index.
+    /// The items are added to the list in the order they appear in the collection. Therefore, the items at and after <paramref name="index"/> are pushed to the end of the list by the number of items in <paramref name="items"/>.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list to which the items will be inserted. Cannot be <see langword="null"/>.</param>
     /// <param name="index">Zero-based index at which the items will be inserted.</param>
@@ -65,6 +69,7 @@ public static class ListExtensions
     /// <summary>
     /// Reverses the order of elements in the list.
     /// </summary>
+    /// <remarks>This method reverses the elements of the list in place, meaning that the original list is modified.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list whose elements will be reversed. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
@@ -88,8 +93,8 @@ public static class ListExtensions
     /// </summary>
     /// <remarks>If the provided list is a <see cref="List{T}"/>, the method uses its built-in sorting
     /// mechanism for better performance. For other implementations of <see cref="IList{T}"/>, the method sorts the
-    /// elements by copying them to an array, sorting the array,  and then copying the sorted elements back to the
-    /// list.</remarks>
+    /// elements by copying them to an array, sorting the array, and then copying the sorted elements back to the list.</remarks>
+    /// This method sorts the elements of the list in place, meaning that the original list is modified.
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list to sort. Cannot be <see langword="null"/>.</param>
     /// <param name="ascending">A value indicating whether to sort the list in ascending order. If <see langword="false"/>, the list is sorted
@@ -131,6 +136,7 @@ public static class ListExtensions
     /// <summary>
     /// Shuffles the elements of a list in place using Fisher-Yates algorithm.
     /// </summary>
+    /// <remarks>This method shuffles the elements of the list in place, meaning that the original list is modified.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list in which the items will be shuffled. Cannot be <see langword="null"/>.</param>
     /// <param name="randomizer">The used random number generator. A new <see cref="Random"/> instance will be created and used if <see langword="null"/>.</param>
@@ -152,6 +158,7 @@ public static class ListExtensions
     /// <summary>
     /// Randomly mixes the elements of a sequence into the list.
     /// </summary>
+    /// <remarks>This method modifies the original list by inserting elements from the specified sequence at random positions.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list to be mixed into. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence of items to mix into the list. Cannot be <see langword="null"/>.</param>
@@ -175,6 +182,7 @@ public static class ListExtensions
     /// <summary>
     /// Randomly mixes the elements of a sequence into the list.
     /// </summary>
+    /// <remarks>This method modifies the original list by inserting elements from the specified sequence at random positions.</remarks>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list to be mixed into. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence of items to mix into the list. Cannot be <see langword="null"/>.</param>
@@ -370,7 +378,8 @@ public static class ListExtensions
 
     /// <summary>
     /// Applies a transformation function to each element in the specified list, replacing each element with the result of the transformation.
-    /// </summary>    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list whose elements will be transformed. Cannot be <see langword="null"/>.</param>
     /// <param name="transform">A function that defines the transformation to apply to each element. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="transform"/> is <see langword="null"/>.</exception>
@@ -390,7 +399,8 @@ public static class ListExtensions
 
     /// <summary>
     /// Applies a transformation function to each element in the specified list, replacing each element with the result of the transformation.
-    /// </summary>    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="list">The list whose elements will be transformed. Cannot be <see langword="null"/>.</param>
     /// <param name="transform">A function that defines the transformation to apply to each element. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="transform"/> is <see langword="null"/>.</exception>

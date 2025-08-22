@@ -44,7 +44,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection.
     /// </summary>
-    /// <remarks>This method is useful for adding a range of items to a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -69,7 +68,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds multiple items to the collection.
     /// </summary>
-    /// <remarks>This method is useful for adding a range of items to a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to which the items will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to add to the collection. Cannot be <see langword="null"/>.</param>
@@ -208,7 +206,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes multiple items from the collection.
     /// </summary>
-    /// <remarks>This method is useful for removing a range of items from a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection from which the items will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to remove from the collection. Cannot be <see langword="null"/>.</param>
@@ -235,7 +232,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes multiple items from the collection.
     /// </summary>
-    /// <remarks>This method is useful for removing a range of items from a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection from which the items will be removed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to remove from the collection. Cannot be <see langword="null"/>.</param>
@@ -247,7 +243,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all occurences of an item from the collection.
     /// </summary>
-    /// <remarks>This method is useful for removing all instances of a specific item from a collection.</remarks>
     /// <typeparam name="T"></typeparam>
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="item">The item to remove. Can be <see langword="null"/></param>
@@ -270,7 +265,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all occurences of multiple items from the collection.
     /// </summary>
-    /// <remarks>This method is useful for removing all instances of specific items from a collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="items">The items to remove. Cannot be <see langword="null"/></param>
@@ -294,7 +288,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Removes all occurences of multiple items from the collection.
     /// </summary>
-    /// <remarks>This method is useful for removing all instances of specific items from a collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="items">The items to remove. Cannot be <see langword="null"/></param>
@@ -420,7 +413,6 @@ public static class CollectionExtensions
     /// <summary>
     /// Adds a sequence of items to the collection if the sequence is not <see langword="null"/> and contains elements.
     /// </summary>
-    /// <remarks>This method is useful for adding a range of items to a collection in a single operation.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to add to. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The sequence to test and add. Can be <see langword="null"/>.</param>
@@ -575,6 +567,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Divides the elements of the specified collection into smaller lists of a given size.
     /// </summary>
+    /// <remarks>This method is useful for breaking a large collection into smaller, more manageable pieces.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to be divided. Cannot be <see langword="null"/>.</param>
     /// <param name="sliceSize">The maximum number of elements in each sublist. Must be greater than or equal to 1.</param>
@@ -614,6 +607,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Divides the elements of the specified collection into smaller lists based on a split predicate.
     /// </summary>
+    /// <remarks>This method is useful for breaking a large collection into smaller, more manageable pieces.</remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to be divided. Cannot be <see langword="null"/>.</param>
     /// <param name="splitPredicate">A function to determine whether an element should be the start of a new slice.</param>
@@ -651,9 +645,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Identifies and groups duplicate elements in the specified collection.
     /// </summary>
-    /// <remarks>The method groups elements based on their equality as determined by the specified or default
-    /// equality comparer. Each group in the result contains all occurrences of a particular element from the input
-    /// collection.</remarks>
+    /// <remarks>The method groups elements based on their equality as determined by the specified or default equality comparer. Each group in the result contains all occurrences of a particular element from the input collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection. Must be non-nullable.</typeparam>
     /// <param name="collection">The collection to search for duplicate elements. Cannot be <see langword="null"/>.</param>
     /// <param name="includeUniques">A value indicating whether to include unique elements (elements that appear only once) in the result. If <see
@@ -692,9 +684,7 @@ public static class CollectionExtensions
     /// <summary>
     /// Identifies and groups duplicate elements in the specified collection.
     /// </summary>
-    /// <remarks>The method groups elements based on their equality as determined by the specified or default
-    /// equality comparer after applying the key selector function. Each group in the result contains all occurrences of a particular element from the input
-    /// collection.</remarks>
+    /// <remarks>The method groups elements based on their equality as determined by the specified or default equality comparer. Each group in the result contains all occurrences of a particular element from the input collection.</remarks>
     /// <typeparam name="T">The type of elements in the collection. Must be non-nullable.</typeparam>
     /// <typeparam name="TKey">The type of the key returned by the key selector function. Must be non-nullable.</typeparam>
     /// <param name="collection">The collection to search for duplicate elements. Cannot be <see langword="null"/>.</param>

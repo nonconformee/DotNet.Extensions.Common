@@ -93,6 +93,7 @@ public static class DictionaryExtensions
     /// <summary>
     /// Gets a value from the dictionary or returns the default value for the type if the dictionary does not contain the specified key.
     /// </summary>
+    /// <remarks>This method is useful for safely retrieving values from a dictionary without throwing an exception if the key does not exist.
     /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary from which the item will be retrieved. Cannot be <see langword="null"/>.</param>
@@ -111,9 +112,7 @@ public static class DictionaryExtensions
     /// <summary>
     /// Retrieves the value associated with the specified key from the dictionary, or creates and adds a new value if the key does not exist.
     /// </summary>
-    /// <remarks>This method is useful for scenarios where you need to ensure a key exists in the dictionary
-    /// and initialize its value if it does not. The <paramref name="valueFactory"/> is only invoked if the key is not
-    /// already present in the dictionary.</remarks>
+    /// <remarks>This method is useful for scenarios where you need to ensure a key exists in the dictionary and initialize its value if it does not. The <paramref name="valueFactory"/> is only invoked if the key is not already present in the dictionary.</remarks>
     /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary to retrieve the value from or add the new value to. Cannot be <see langword="null"/>.</param>
@@ -140,6 +139,7 @@ public static class DictionaryExtensions
     /// <summary>
     /// Adds a key-value pair to the dictionary if the key does not exist, or updates the value for the key if it already exists.
     /// </summary>
+    /// <remarks>This method is useful for ensuring that a key-value pair is present in the dictionary with the desired value.</remarks>
     /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary to modify. Cannot be <see langword="null"/>.</param>
@@ -168,9 +168,7 @@ public static class DictionaryExtensions
     /// Updates the value associated with the specified key in the dictionary, or creates a new key-value pair if the
     /// key does not exist.
     /// </summary>
-    /// <remarks>If the specified <paramref name="key"/> already exists in the dictionary, its value is
-    /// replaced with the result of <paramref name="valueFactory"/>. If the key does not exist, a new key-value pair is
-    /// added to the dictionary.</remarks>
+    /// <remarks>This method is useful for scenarios where you want to ensure that a key exists in the dictionary and its value is updated or created based on a factory function.</remarks>
     /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary to update or create the key-value pair in. Cannot be <see langword="null"/>.</param>
@@ -200,8 +198,7 @@ public static class DictionaryExtensions
     /// <summary>
     /// Retrieves the key associated with the specified value in the dictionary.
     /// </summary>
-    /// <remarks>If multiple keys in the dictionary are associated with the specified value, the first key
-    /// encountered is returned.</remarks>
+    /// <remarks>If multiple keys in the dictionary are associated with the specified value, the first key encountered is returned.</remarks>
     /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary to search for the specified value. Cannot be <see langword="null"/>.</param>
