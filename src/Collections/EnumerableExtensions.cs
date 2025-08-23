@@ -3,14 +3,15 @@ using nonconformee.DotNet.Extensions.Exceptions;
 using nonconformee.DotNet.Extensions.Randomizing;
 using System.Collections;
 using System.Drawing;
+using System.Threading;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
 // TODO : Ensure all default values are documented.
-// TODO : Ensure all exceptions are documented.
+// TODO : Create copy for AsyncEnumerable
 
 /// <summary>
-/// Provides extension methods for <see cref="IEnumerable{T}"/>.
+/// Provides extension methods for <see cref="IEnumerable{T}"/> and <see cref="IEnumerable"/>.
 /// </summary>
 public static class EnumerableExtensions
 {
@@ -367,18 +368,24 @@ public static class EnumerableExtensions
     /// Note that the returned sequence is a different type and instance than <paramref name="sequence"/>.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence to peek into. Cannot be <see langword="null"/>.</param>
-    /// <param name="firstElement">When this method returns, contains the first element of the sequence if it exists; otherwise, <see langword="null"/> if the sequence is empty.</param>
     /// <returns>An enumerable that iterates over the original sequence, starting from the first element.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
-    public static IEnumerable<T> Peek<T>(this IEnumerable<T> sequence, out T? firstElement)
+    public static (IEnumerable<T> sequence, T? firstElement) Peek<T>(this IEnumerable<T> sequence)
     {
         if (sequence is null) throw new ArgumentNullException(nameof(sequence));
 
+        T? firstElement = default;
+        bool hasFirstElement = false;
+
         using var enumerator = sequence.GetEnumerator();
-        var hasFirstElement = enumerator.MoveNext();
-        firstElement = enumerator.Current;
-        
-        return new PeekedEnumerable<T>(enumerator, hasFirstElement, firstElement);
+        hasFirstElement = enumerator.MoveNext();
+
+        if (hasFirstElement)
+        {
+            firstElement = enumerator.Current;
+        }
+
+        return (new PeekedEnumerable<T>(enumerator, hasFirstElement, firstElement), firstElement);
     }
 
     /// <summary>
@@ -544,7 +551,7 @@ public static class EnumerableExtensions
     private sealed class PeekedEnumerable<T>(
         IEnumerator<T> _enumerator,
         bool _hasFirstElement,
-        T _firstElement)
+        T? _firstElement)
         : IEnumerable<T>
     {
         public IEnumerator<T> GetEnumerator() => new PeekedEnumerator<T>(_enumerator, _hasFirstElement, _firstElement);
@@ -555,12 +562,12 @@ public static class EnumerableExtensions
     private sealed class PeekedEnumerator<T>(
         IEnumerator<T> _enumerator,
         bool _hasFirstElement,
-        T _firstElement)
+        T? _firstElement)
         : IEnumerator<T>
     {
         private bool _isFirstMove = true;
 
-        public T Current { get; set; } = default!;
+        public T? Current { get; set; } = default!;
 
         public bool MoveNext()
         {

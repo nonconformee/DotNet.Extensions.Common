@@ -4,7 +4,7 @@ using System.Collections;
 namespace nonconformee.DotNet.Extensions.Comparison;
 
 /// <summary>
-/// Provides extension methods for <see cref="IComparer{T}"/>.
+/// Provides extension methods for <see cref="IComparer{T}"/> and <see cref="IComparer"/>.
 /// </summary>
 public static class ComparerExtensions
 {
@@ -53,6 +53,19 @@ public static class ComparerExtensions
     }
 
     /// <summary>
+    /// Converts a comparison function to an <see cref="IComparer"/>.
+    /// </summary>
+    /// <param name="comparison">The delegate which can be used for comparison. Cannot be <see langword="null"/>.</param>
+    /// <returns>The comparer which uses the comparison function.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparison"/> is <see langword="null"/>.</exception>
+    public static IComparer ToComparer<T>(this Func<object?, object?, int> comparison)
+    {
+        if (comparison is null) throw new ArgumentNullException(nameof(comparison));
+
+        return Comparer<object?>.Create(new Comparison<object?>((x, y) => comparison(x, y)));
+    }
+
+    /// <summary>
     /// Converts a comparison function to an <see cref="IComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">The type of objects to compare.</typeparam>
@@ -67,13 +80,26 @@ public static class ComparerExtensions
     }
 
     /// <summary>
+    /// Converts an <see cref="IComparer"/> to a function that compares two objects.
+    /// </summary>
+    /// <param name="comparer">The comparer to convert into a comparison function. Cannot be <see langword="null"/>.</param>
+    /// <returns>The comparison function.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static Func<object?, object?, int> ToComparerFunc(this IComparer comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        return (x, y) => comparer.Compare(x, y);
+    }
+
+    /// <summary>
     /// Converts an <see cref="IComparer{T}"/> to a function that compares two objects.
     /// </summary>
     /// <typeparam name="T">The type of objects to compare.</typeparam>
     /// <param name="comparer">The comparer to convert into a comparison function. Cannot be <see langword="null"/>.</param>
     /// <returns>The comparison function.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
-    public static Func<T, T, int> ToComparerFunc<T>(this IComparer<T> comparer)
+    public static Func<T?, T?, int> ToComparerFunc<T>(this IComparer<T> comparer)
     {
         if (comparer is null) throw new ArgumentNullException(nameof(comparer));
 
@@ -193,6 +219,19 @@ public static class ComparerExtensions
             int result = first.Compare(x, y);
             return result != 0 ? result : second.Compare(keySelector(y), keySelector(x));
         });
+    }
+
+    /// <summary>
+    /// Returns an <see cref="IComparer{T}"/> that reverses the sort order of the specified comparer.
+    /// </summary>
+    /// <param name="comparer">The comparer whose sort order is to be reversed. Cannot be <see langword="null"/>.</param>
+    /// <returns>An <see cref="IComparer{T}"/> that sorts in the opposite order of the specified <paramref name="comparer"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
+    public static IComparer Reverse<T>(this IComparer comparer)
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+
+        return Comparer<T>.Create((x, y) => -comparer.Compare(x, y));
     }
 
     /// <summary>

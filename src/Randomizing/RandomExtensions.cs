@@ -34,8 +34,8 @@ public static class RandomExtensions
         if (!stream.CanWrite) throw new ArgumentException("Stream cannot be written to.", nameof(stream));
         if (length is not null && length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than zero if specified.");
         if (length is null && !stream.CanSeek) throw new ArgumentException("Stream must be seekable if length is not specified.", nameof(stream));
-        
-        if(length is null)
+
+        if (length is null)
         {
             length = (int)(stream.Length - stream.Position);
             if (length < 0) length = 0;
@@ -48,7 +48,7 @@ public static class RandomExtensions
             stream.WriteByte(randomizer.NextByte());
             bytesWritten++;
         }
-        
+
         return bytesWritten;
     }
 
@@ -123,7 +123,7 @@ public static class RandomExtensions
     {
         if (randomizer is null) throw new ArgumentNullException(nameof(randomizer));
         if (max < 0) throw new ArgumentOutOfRangeException(nameof(max), "Maximum value must be greater than or equal to zero.");
-        
+
         return (byte)randomizer.Next(0, max + 1);
     }
 
@@ -434,10 +434,10 @@ public static class RandomExtensions
     public static string NextLoremIpsum(this Random randomizer, int? words = null, bool startWithLoremIpsum = true, bool startWithCapital = true, bool endWithPeriod = true)
     {
         words ??= randomizer.Next(5, 16);
-        
+
         if (randomizer == null) throw new ArgumentNullException(nameof(randomizer));
         if (words < 0) throw new ArgumentOutOfRangeException(nameof(words), "Number of words must be zero or more.");
-        if (startWithLoremIpsum && (words < 5)) throw new ArgumentOutOfRangeException(nameof(words), "If starting with 'lorem ipsum', at least five words are required.");      
+        if (startWithLoremIpsum && (words < 5)) throw new ArgumentOutOfRangeException(nameof(words), "If starting with 'lorem ipsum', at least five words are required.");
 
         if (words == 0)
         {
@@ -519,4 +519,239 @@ public static class RandomExtensions
 
         return result.ToString();
     }
-}
+
+    /// <summary>
+    /// Returns a random number from the beta distribution with specified alpha and beta parameters.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <param name="alpha">The alpha shape parameter (alpha > 0).</param>
+    /// <param name="beta">The beta shape parameter (beta > 0).</param>
+    /// <returns>A beta-distributed random number between 0 and 1.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="alpha"/> or <paramref name="beta"/> is not positive.</exception>
+    public static double NextBeta(this Random random, double alpha, double beta)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+        if (alpha <= 0) throw new ArgumentOutOfRangeException(nameof(alpha), "Alpha must be positive.");
+        if (beta <= 0) throw new ArgumentOutOfRangeException(nameof(beta), "Beta must be positive.");
+
+        // Using the relationship between Gamma and Beta distributions
+        double x = random.NextGamma(alpha, 1.0);
+        double y = random.NextGamma(beta, 1.0);
+
+        return x / (x + y);
+    }
+
+    /// <summary>
+    /// Returns a random number from the gamma distribution with specified shape and scale parameters.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <param name="shape">The shape parameter (k > 0).</param>
+    /// <param name="scale">The scale parameter (θ > 0).</param>
+    /// <returns>A gamma-distributed random number.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="shape"/> or <paramref name="scale"/> is not positive.</exception>
+    public static double NextGamma(this Random random, double shape, double scale)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+        if (shape <= 0) throw new ArgumentOutOfRangeException(nameof(shape), "Shape must be positive.");
+        if (scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale), "Scale must be positive.");
+
+        // Implementation of Marsaglia and Tsang's method
+        double d = shape - 1.0 / 3.0;
+        double c = 1.0 / Math.Sqrt(9.0 * d);
+        double x, v, u;
+
+        while (true)
+        {
+            do
+            {
+                x = random.NextGaussian(0, 1);
+                v = 1.0 + c * x;
+            }
+            while (v <= 0);
+
+            v = v * v * v;
+            u = random.NextDouble();
+
+            if (u < 1.0 - 0.0331 * x * x * x * x ||
+                Math.Log(u) < 0.5 * x * x + d * (1.0 - v + Math.Log(v)))
+            {
+                return scale * d * v;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns a random number from the Poisson distribution with specified mean.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <param name="lambda">The mean (lambda > 0).</param>
+    /// <returns>A Poisson-distributed random number.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="lambda"/> is not positive.</exception>
+    public static int NextPoisson(this Random random, double lambda)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+        if (lambda <= 0) throw new ArgumentOutOfRangeException(nameof(lambda), "Lambda must be positive.");
+
+        // Knuth's algorithm
+        double L = Math.Exp(-lambda);
+        int k = 0;
+        double p = 1.0;
+
+        do
+        {
+            k++;
+            p *= random.NextDouble();
+        }
+        while (p > L);
+
+        return k - 1;
+    }
+
+    /// <summary>
+    /// Randomly selects an item from a collection according to specified weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items in the collection.</typeparam>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <param name="items">The collection to select from. Cannot be <see langword="null"/> or empty.</param>
+    /// <param name="weights">The weights for each item. Cannot be <see langword="null"/> and must have the same length as <paramref name="items"/>.</param>
+    /// <returns>A randomly selected item from the collection.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/>, <paramref name="items"/> or <paramref name="weights"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="items"/> is empty or <paramref name="weights"/> has different length than <paramref name="items"/>.</exception>
+    public static T NextWeighted<T>(this Random random, IReadOnlyList<T> items, IReadOnlyList<double> weights)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+        if (items == null) throw new ArgumentNullException(nameof(items));
+        if (weights == null) throw new ArgumentNullException(nameof(weights));
+        if (items.Count == 0) throw new ArgumentException("Collection must not be empty.", nameof(items));
+        if (items.Count != weights.Count) throw new ArgumentException("Weights must have same length as items.", nameof(weights));
+
+        double totalWeight = 0;
+        for (int i = 0; i < weights.Count; i++)
+        {
+            if (weights[i] < 0) throw new ArgumentException("Weights cannot be negative.", nameof(weights));
+            totalWeight += weights[i];
+        }
+
+        if (totalWeight <= 0) throw new ArgumentException("At least one weight must be positive.", nameof(weights));
+
+        double value = random.NextDouble() * totalWeight;
+        double sum = 0;
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            sum += weights[i];
+            if (value < sum)
+                return items[i];
+        }
+
+        // Fallback due to potential floating-point precision issues
+        return items[items.Count - 1];
+    }
+
+    /// <summary>
+    /// Randomly shuffles a list using the Fisher-Yates algorithm.
+    /// </summary>
+    /// <typeparam name="T">The type of the items in the list.</typeparam>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <param name="list">The list to shuffle. Cannot be <see langword="null"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> or <paramref name="list"/> is <see langword="null"/>.</exception>
+    public static void Shuffle<T>(this Random random, IList<T> list)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+        if (list == null) throw new ArgumentNullException(nameof(list));
+
+        int n = list.Count;
+        for (int i = n - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            T temp = list[i];
+            list[i] = list[j];
+            list[j] = temp;
+        }
+    }
+
+    /// <summary>
+    /// Returns a random point on a unit circle.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <returns>A tuple containing the x and y coordinates of a random point on the unit circle.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    public static (double X, double Y) NextPointOnUnitCircle(this Random random)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+
+        double angle = random.NextDouble() * 2 * Math.PI;
+        return (Math.Cos(angle), Math.Sin(angle));
+    }
+
+    /// <summary>
+    /// Returns a random point on a unit sphere.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <returns>A tuple containing the x, y, and z coordinates of a random point on the unit sphere.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    public static (double X, double Y, double Z) NextPointOnUnitSphere(this Random random)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+
+        // Use Marsaglia method for uniform distribution on sphere
+        double x1, x2, s;
+        do
+        {
+            x1 = random.NextDouble() * 2 - 1;
+            x2 = random.NextDouble() * 2 - 1;
+            s = x1 * x1 + x2 * x2;
+        } while (s >= 1);
+
+        double s2 = Math.Sqrt((1 - s) * 4);
+
+        return (x1 * s2, x2 * s2, 1 - 2 * s);
+    }
+
+    /// <summary>
+    /// Returns a random point on a unit plane.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <returns>A tuple containing the x and y coordinates of a random point in a unit square (from 0,0 to 1,1).</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    public static (double X, double Y) NextPointOnUnitPlane(this Random random)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+
+        return (random.NextDouble(), random.NextDouble());
+    }
+
+    /// <summary>
+    /// Returns a random point on the boundary of a unit square.
+    /// </summary>
+    /// <param name="random">The randomizer. Cannot be <see langword="null"/>.</param>
+    /// <returns>A tuple containing the x and y coordinates of a random point on the boundary of a unit square.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
+    public static (double X, double Y) NextPointOnUnitSquare(this Random random)
+    {
+        if (random == null) throw new ArgumentNullException(nameof(random));
+
+        // Generate a random value between 0 and 4 to determine which side of the square
+        double side = random.NextDouble() * 4.0;
+
+        if (side < 1.0) // Bottom edge
+        {
+            return (side, 0.0);
+        }
+        else if (side < 2.0) // Right edge
+        {
+            return (1.0, side - 1.0);
+        }
+        else if (side < 3.0) // Top edge
+        {
+            return (3.0 - side, 1.0);
+        }
+        else // Left edge
+        {
+            return (0.0, 4.0 - side);
+        }
+    }
+}   

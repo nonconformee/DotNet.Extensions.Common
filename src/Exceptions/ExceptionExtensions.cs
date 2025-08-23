@@ -78,6 +78,9 @@ public static class ExceptionExtensions
     /// <summary>
     /// Retrieves a list of all exceptions in the chain, starting from the provided exception and including all inner exceptions.
     /// </summary>
+    /// <remarks>
+    /// This method retrieves all exceptions in the chain, starting from the provided exception and including all inner exceptions.
+    /// </remarks>
     /// <param name="exception">The exception. Cannot be <see langword="null"/>.</param>
     /// <returns>A list of all exceptions in the chain.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>

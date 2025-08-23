@@ -93,7 +93,7 @@ public static class DictionaryExtensions
     /// <summary>
     /// Gets a value from the dictionary or returns the default value for the type if the dictionary does not contain the specified key.
     /// </summary>
-    /// <remarks>This method is useful for safely retrieving values from a dictionary without throwing an exception if the key does not exist.
+    /// <remarks>This method is useful for safely retrieving values from a dictionary without throwing an exception if the key does not exist.</remarks>
     /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
     /// <param name="dictionary">The dictionary from which the item will be retrieved. Cannot be <see langword="null"/>.</param>

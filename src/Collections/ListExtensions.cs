@@ -25,7 +25,7 @@ public static class ListExtensions
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
         if (items is null) throw new ArgumentNullException(nameof(items));
-        list.ThrowIfIndexArgumentIsOutOfRange(index + 1);
+        if (index < 0 || index > list.Count) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
 
         foreach (var item in items)
         {
@@ -58,7 +58,7 @@ public static class ListExtensions
     public static void RemoveAtRange<T>(this IList<T> list, int index, int count)
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
-        list.ThrowIfIndexArgumentIsOutOfRange(index, count);
+        if (index < 0 || index >= list.Count) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
 
         for (int i = 0; i < count; i++)
         {
@@ -271,9 +271,8 @@ public static class ListExtensions
     public static void Swap<T>(this IList<T> list, int index1, int index2)
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
-
-        list.ThrowIfIndexArgumentIsOutOfRange(index1);
-        list.ThrowIfIndexArgumentIsOutOfRange(index2);
+        if (index1 < 0 || index1 >= list.Count) throw new ArgumentOutOfRangeException(nameof(index1), "Index is out of range.");
+        if (index2 < 0 || index2 >= list.Count) throw new ArgumentOutOfRangeException(nameof(index2), "Index is out of range.");
 
         if (index1 == index2)
         {
@@ -326,8 +325,8 @@ public static class ListExtensions
     public static void Move<T> (this IList<T> list, int oldIndex, int newIndex)
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
-        list.ThrowIfIndexArgumentIsOutOfRange(oldIndex);
-        list.ThrowIfIndexArgumentIsOutOfRange(newIndex);
+        if (oldIndex < 0 || oldIndex >= list.Count) throw new ArgumentOutOfRangeException(nameof(oldIndex), "Old index is out of range.");
+        if (newIndex < 0 || newIndex >= list.Count) throw new ArgumentOutOfRangeException(nameof(newIndex), "New index is out of range.");
 
         if (oldIndex == newIndex)
         {
