@@ -75,9 +75,21 @@ public static class TaskExtensions
         return await task.ConfigureAwait(false);
     }
 
-    public static async void WithExceptionHandler(this Task task, Action<Exception> onException, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Executes the specified task and invokes the provided exception handler if an exception occurs.
+    /// </summary>
+    /// <remarks>
+    /// This method ensures that any exception thrown during the execution of the task is caught and passed to the specified exception handler.
+    /// The task is awaited asynchronously, and the exception handler is invoked synchronously.
+    /// </remarks>
+    /// <param name="task">The task to execute. Cannot be <see langword="null"/>.</param>
+    /// <param name="onException">The action to invoke when an exception is thrown. The exception is passed as a parameter to this action. Cannot be <see langword="null"/>.</param>
+    /// <returns>The task to await the completion of <paramref name="task"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="task"/> or <paramref name="onException"/> is <see langword="null"/>.</exception>
+    public static async Task WithExceptionHandler(this Task task, Action<Exception> onException)
     {
-        if (task == null) throw new ArgumentNullException(nameof(task));
+        if (task is null) throw new ArgumentNullException(nameof(task));
+        if (onException is null) throw new ArgumentNullException(nameof(onException));
 
         try
         {
@@ -89,17 +101,59 @@ public static class TaskExtensions
         }
     }
 
-    public static async void WithExceptionHandler<T>(this Task<T> task, Action<Exception> onException, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Executes the specified task and invokes the provided exception handler if an exception occurs.
+    /// </summary>
+    /// <remarks>
+    /// This method ensures that any exception thrown during the execution of the task is caught and passed to the specified exception handler.
+    /// The task is awaited asynchronously, and the exception handler is invoked synchronously.
+    /// The exception handler returns a value of type <typeparamref name="T"/> to be used as the result of the task in case of an exception.
+    /// </remarks>
+    /// <param name="task">The task to execute. Cannot be <see langword="null"/>.</param>
+    /// <param name="onException">The action to invoke when an exception is thrown. The exception is passed as a parameter to this action. Cannot be <see langword="null"/>.</param>
+    /// <returns>The task to await the completion of <paramref name="task"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="task"/> or <paramref name="onException"/> is <see langword="null"/>.</exception>
+    public static async Task<T> WithExceptionHandler<T>(this Task<T> task, Func<Exception, T> onException)
     {
-        if (task == null) throw new ArgumentNullException(nameof(task));
+        if (task is null) throw new ArgumentNullException(nameof(task));
+        if (onException is null) throw new ArgumentNullException(nameof(onException));
 
         try
         {
-            await task.ConfigureAwait(false);
+            return await task.ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            onException(ex);
+            return onException(ex);
+        }
+    }
+
+    /// <summary>
+    /// Executes the specified task within the provided <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method temporarily sets the provided <paramref name="synchronizationContext"/> as the current synchronization context while the task is executed.
+    /// After the task completes, the original synchronization context is restored.
+    /// </remarks>
+    /// <param name="task">The task to execute. Cannot be <see langword="null"/>.</param>
+    /// <param name="synchronizationContext">The <see cref="SynchronizationContext"/> to use for the task execution. Cannot be <see langword="null"/>.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="task"/> or <paramref name="synchronizationContext"/> is <see langword="null"/>.</exception>
+    public static async Task InSynchronizationContext(this Task task, SynchronizationContext synchronizationContext)
+    {
+        if (task is null) throw new ArgumentNullException(nameof(task));
+        if (synchronizationContext is null) throw new ArgumentNullException(nameof(synchronizationContext));
+
+        var originalContext = SynchronizationContext.Current;
+
+        try
+        {
+            SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+            await task.ConfigureAwait(true);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(originalContext);
         }
     }
 }
