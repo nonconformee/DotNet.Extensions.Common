@@ -1,6 +1,15 @@
 ﻿
 namespace nonconformee.DotNet.Extensions.Async;
 
+// TODO : Pass additional state
+// TODO : WithFinalizer
+// TODO : WithCancellation
+// TODO : WithDelay
+// TODO : WithRetry
+// TODO : WithThrottling
+// TODO : WithCircuitBreaker
+// TODO : WithFallback 
+
 /// <summary>
 /// Provides extension methods for <see cref="Task"/> and <see cref="Task{T}"/>.
 /// </summary>
@@ -150,6 +159,35 @@ public static class TaskExtensions
         {
             SynchronizationContext.SetSynchronizationContext(synchronizationContext);
             await task.ConfigureAwait(true);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(originalContext);
+        }
+    }
+
+    /// <summary>
+    /// Executes the specified task within the provided <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method temporarily sets the provided <paramref name="synchronizationContext"/> as the current synchronization context while the task is executed.
+    /// After the task completes, the original synchronization context is restored.
+    /// </remarks>
+    /// <param name="task">The task to execute. Cannot be <see langword="null"/>.</param>
+    /// <param name="synchronizationContext">The <see cref="SynchronizationContext"/> to use for the task execution. Cannot be <see langword="null"/>.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="task"/> or <paramref name="synchronizationContext"/> is <see langword="null"/>.</exception>
+    public static async Task<T> InSynchronizationContext<T>(this Task<T> task, SynchronizationContext synchronizationContext)
+    {
+        if (task is null) throw new ArgumentNullException(nameof(task));
+        if (synchronizationContext is null) throw new ArgumentNullException(nameof(synchronizationContext));
+
+        var originalContext = SynchronizationContext.Current;
+
+        try
+        {
+            SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+            return await task.ConfigureAwait(true);
         }
         finally
         {
