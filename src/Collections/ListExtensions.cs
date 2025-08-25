@@ -190,7 +190,7 @@ public static class ListExtensions
     /// new instance of <see cref="Random"/> is created.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static void MixWith<T>(this IList<T> list, Random? randomizer = null, params T[] items)
-        => list.Mix((IEnumerable<T>)items, randomizer);
+        => list.MixWith((IEnumerable<T>)items, randomizer);
 
     /// <summary>
     /// Picks a random item from the list.
@@ -236,7 +236,7 @@ public static class ListExtensions
 
         list.RemoveAt(index);
 
-        return list[index];
+        return value;
     }
 
     /// <summary>

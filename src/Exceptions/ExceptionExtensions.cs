@@ -9,6 +9,7 @@ public static class ExceptionExtensions
     /// <summary>
     /// Retrieves the full message of an exception, including messages from all inner exceptions.
     /// </summary>
+    /// <remarks>This method is intended to provide human-readyble text describing exceptions (e.g. for debugging or logging).</remarks>
     /// <param name="exception">The exception. Cannot be <see langword="null"/>.</param>
     /// <returns>The full message.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
@@ -31,6 +32,8 @@ public static class ExceptionExtensions
     /// <summary>
     /// Retrieves the full stack trace of an exception, including stack traces from all inner exceptions.
     /// </summary>
+    /// <remarks>This method is intended to provide human-readyble text describing exceptions (e.g. for debugging or logging).
+    /// For exceptions for which no stack trace is available, <c>(no stack trace available)</c> is inserted.</remarks>
     /// <param name="exception">The exception. Cannot be <see langword="null"/>.</param>
     /// <returns>The full stack trace.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
@@ -65,6 +68,7 @@ public static class ExceptionExtensions
     /// <summary>
     /// Retrieves the full details of an exception, including its type, message, and stack trace.
     /// </summary>
+    /// <remarks>This method is intended to provide human-readyble text describing exceptions (e.g. for debugging or logging).</remarks>
     /// <param name="exception">The exception. Cannot be <see langword="null"/>.</param>
     /// <returns>The full type, message, and stack trace.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
@@ -78,9 +82,6 @@ public static class ExceptionExtensions
     /// <summary>
     /// Retrieves a list of all exceptions in the chain, starting from the provided exception and including all inner exceptions.
     /// </summary>
-    /// <remarks>
-    /// This method retrieves all exceptions in the chain, starting from the provided exception and including all inner exceptions.
-    /// </remarks>
     /// <param name="exception">The exception. Cannot be <see langword="null"/>.</param>
     /// <returns>A list of all exceptions in the chain.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>

@@ -4,6 +4,7 @@ using nonconformee.DotNet.Extensions.Randomizing;
 using System.Collections;
 using System.Drawing;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
@@ -15,6 +16,20 @@ namespace nonconformee.DotNet.Extensions.Collections;
 /// </summary>
 public static class EnumerableExtensions
 {
+    /// <summary>
+    /// Converts a synchronous <see cref="IEnumerable{T}"/> sequence to an asynchronous <see cref="IAsyncEnumerable{T}"/> sequence.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="sequence">The sequence.</param>
+    /// <returns>An asynchronous sequence of the same elements.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
+    public static IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> sequence)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+
+        return new AsyncEnumerableWrapper<T>(sequence);
+    }
+
     /// <summary>
     /// Converts a non-generic <see cref="IEnumerable"/> sequence to a generic <see cref="IEnumerable{T}"/> sequence.
     /// </summary>
@@ -163,7 +178,7 @@ public static class EnumerableExtensions
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to filter. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to exclude from the sequence. Cannot be <see langword="null"/>.</param>
-    /// <returns>An new sequence not containing the excluded elements.</returns>
+    /// <returns>A new sequence not containing the excluded elements.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     /// <remarks><paramref name="items"/> will be fully enumerated before the first element of <paramref name="sequence"/> is yielded.</remarks>
     public static IEnumerable<T> Exclude<T>(this IEnumerable<T> sequence, IEnumerable<T> items)
@@ -190,7 +205,7 @@ public static class EnumerableExtensions
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The original sequence to filter. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The items to exclude from the sequence. Cannot be <see langword="null"/>.</param>
-    /// <returns>An new sequence not containing the excluded elements.</returns>
+    /// <returns>A new sequence not containing the excluded elements.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     /// <remarks><paramref name="items"/> will be fully enumerated before the first element of <paramref name="sequence"/> is yielded.</remarks>
     public static IEnumerable<T> Exclude<T>(this IEnumerable<T> sequence, params T[] items)
@@ -199,9 +214,12 @@ public static class EnumerableExtensions
     /// <summary>
     /// Combines two sequences into a single sequence by interleaving their elements in random order.
     /// </summary>
-    /// <remarks>Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
+    /// <remarks>
+    /// Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// Therefore, the resulting sequence returns elements with a chance of 50% from either of those, until the first sequence is finished, where the remaining elements of the other sequence are returned as they are enumerated in the corresponding sequence.
-    /// This means, that the end of the returned sequence might not have mixed elements, depending on the length difference of <paramref name="sequence"/> and <paramref name="items"/>.</remarks>
+    /// This means, that the end of the returned sequence might not have mixed elements, depending on the length difference of <paramref name="sequence"/> and <paramref name="items"/>.
+    /// But eventually, all elements of both sequences will be returned.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
     /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
@@ -223,7 +241,7 @@ public static class EnumerableExtensions
 
         while (true)
         {
-            if(enum1Done && enum2Done)
+            if (enum1Done && enum2Done)
             {
                 yield break;
             }
@@ -234,7 +252,7 @@ public static class EnumerableExtensions
 
             if (useEnum1)
             {
-                if(enum1.MoveNext())
+                if (enum1.MoveNext())
                 {
                     yield return enum1.Current;
                 }
@@ -248,7 +266,7 @@ public static class EnumerableExtensions
 
             if (useEnum2)
             {
-                if(enum2.MoveNext())
+                if (enum2.MoveNext())
                 {
                     yield return enum2.Current;
                 }
@@ -265,9 +283,12 @@ public static class EnumerableExtensions
     /// <summary>
     /// Combines two sequences into a single sequence by interleaving their elements in random order.
     /// </summary>
-    /// <remarks>Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
+    /// <remarks>
+    /// Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// Therefore, the resulting sequence returns elements with a chance of 50% from either of those, until the first sequence is finished, where the remaining elements of the other sequence are returned as they are enumerated in the corresponding sequence.
-    /// This means, that the end of the returned sequence might not have mixed elements, depending on the length difference of <paramref name="sequence"/> and <paramref name="items"/>.</remarks>
+    /// This means, that the end of the returned sequence might not have mixed elements, depending on the length difference of <paramref name="sequence"/> and <paramref name="items"/>.
+    /// But eventually, all elements of both sequences will be returned.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
     /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
@@ -288,32 +309,33 @@ public static class EnumerableExtensions
     /// The last batch may contain fewer elements if the total number of elements in the sequence is not evenly divisible by <paramref name="batchSize"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="batchSize"/> is 0 or less.</exception>
-    public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> sequence, int batchSize)
+    public static IEnumerable<List<T>> Batch<T>(this IEnumerable<T> sequence, int batchSize)
     {
         if (sequence is null) throw new ArgumentNullException(nameof(sequence));
         if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than zero.");
 
-        IEnumerable<T> YieldBatchElements<T>(IEnumerator<T> source, int size)
+        var batch = new List<T>(batchSize);
+
+        foreach (var item in sequence)
         {
-            int i = 0;
-            do
+            batch.Add(item);
+
+            if (batch.Count >= batchSize)
             {
-                yield return source.Current;
-            } while (++i < size && source.MoveNext());
+                yield return batch;
+                batch = new List<T>(batchSize);
+            }
         }
 
-        using var enumerator = sequence.GetEnumerator();
-
-        while (enumerator.MoveNext())
+        if (batch.Count > 0)
         {
-            yield return YieldBatchElements(enumerator, batchSize);
+            yield return batch;
         }
     }
 
     /// <summary>
     /// Returns distinct elements from a sequence.
     /// </summary>
-    /// <remarks>This method is useful to find duplicates in a sequence</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
     /// <param name="equalityComparer">An optional equality comparer to compare elements. If <see langword="null"/>, the default equality comparer is used.</param>
@@ -337,7 +359,6 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns distinct elements from a sequence according to a specified key selector.
     /// </summary>
-    /// <remarks>This method is useful for finding duplicates in a sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of key to distinguish elements.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
@@ -368,9 +389,9 @@ public static class EnumerableExtensions
     /// Note that the returned sequence is a different type and instance than <paramref name="sequence"/>.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence to peek into. Cannot be <see langword="null"/>.</param>
-    /// <returns>An enumerable that iterates over the original sequence, starting from the first element.</returns>
+    /// <returns>A tuple which contains the sequence to start/continue enumeration (<c>Sequence</c>) and the first element (<c>FirstElement</c>, can be <see langword="null"/>).</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
-    public static (IEnumerable<T> sequence, T? firstElement) Peek<T>(this IEnumerable<T> sequence)
+    public static (IEnumerable<T> Sequence, T? FirstElement) Peek<T>(this IEnumerable<T> sequence)
     {
         if (sequence is null) throw new ArgumentNullException(nameof(sequence));
 
@@ -391,12 +412,15 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns the minimum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
     /// </summary>
-    /// <remarks>This method is useful for finding the ''smallest'' element in a sequence based on a specific criterion.</remarks>
+    /// <remarks>
+    /// This method is useful for finding the smallest element in a sequence based on a specific criterion.
+    /// Elements which are <see langword="null"/> are ignored.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of the selector.</typeparam>
     /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
     /// <param name="selector">The function which selects the value of an item which is then used for comparison. Cannot be <see langword="null"/>.</param>
-    /// <returns>The minimum element or <see langword="null"/> if the sequence is empty.</returns>
+    /// <returns>The minimum element or the default value of <typeparamref name="T"/> if the sequence is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="selector"/> is <see langword="null"/>.</exception>
     public static T? MinByOrDefault<T, TKey>(this IEnumerable<T> sequence, Func<T, TKey> selector)
         where TKey : IComparable<TKey>
@@ -405,10 +429,10 @@ public static class EnumerableExtensions
         if (selector == null) throw new ArgumentNullException(nameof(selector));
 
         using var enumerator = sequence.GetEnumerator();
-        
+
         if (!enumerator.MoveNext())
         {
-             return default;
+            return default;
         }
 
         T minElement = enumerator.Current;
@@ -418,6 +442,18 @@ public static class EnumerableExtensions
         {
             var candidate = enumerator.Current;
             var candidateValue = selector(candidate);
+
+            if (candidateValue is null)
+            {
+                break;
+            }
+
+            if (minValue is null)
+            {
+                minElement = candidate;
+                minValue = candidateValue;
+                continue;
+            }
 
             if (candidateValue.CompareTo(minValue) < 0)
             {
@@ -432,12 +468,15 @@ public static class EnumerableExtensions
     /// <summary>
     /// Returns the maximum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
     /// </summary>
-    /// <remarks>This method is useful for finding the ''largest'' element in a sequence based on a specific criterion.</remarks>
+    /// <remarks>
+    /// This method is useful for finding the largest element in a sequence based on a specific criterion.
+    /// Elements which are <see langword="null"/> are ignored.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of the selector.</typeparam>
     /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
     /// <param name="selector">The function which selects the value of an item which is then used for comparison. Cannot be <see langword="null"/>.</param>
-    /// <returns>The maximum element or <see langword="null"/> if the sequence is empty.</returns>
+    /// <returns>The maximum element or the default value of <typeparamref name="T"/> if the sequence is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="selector"/> is <see langword="null"/>.</exception>
     public static T? MaxByOrDefault<T, TKey>(this IEnumerable<T> sequence, Func<T, TKey> selector)
         where TKey : IComparable<TKey>
@@ -459,6 +498,18 @@ public static class EnumerableExtensions
         {
             var candidate = enumerator.Current;
             var candidateValue = selector(candidate);
+
+            if (candidateValue is null)
+            {
+                continue;
+            }
+
+            if (maxValue is null)
+            {
+                maxElement = candidate;
+                maxValue = candidateValue;
+                continue;
+            }
 
             if (candidateValue.CompareTo(maxValue) > 0)
             {
@@ -502,52 +553,6 @@ public static class EnumerableExtensions
         return disposed;
     }
 
-    /// <summary>
-    /// Disposes all <see cref="IAsyncDisposable"/> objects within the sequence and optionally the sequence implementation itself if it implements <see cref="IAsyncDisposable"/>.
-    /// </summary>
-    /// <remarks>This method is useful for cleaning up resources held by objects in a sequence.</remarks>
-    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
-    /// <param name="sequence">The sequence of objects to dispose. Cannot be <see langword="null"/>.</param>
-    /// <param name="includeSynchronous"><see langword="true"/> if synchronous dispose (<see cref="IDisposable"/>) shall also be called (same as calling <see cref="DisposeAll{T}(IEnumerable{T})"/>), <see langword="false"/> if only <see cref="IAsyncDisposable"/> shall be called.</param>
-    /// <returns><see langword="true"/> if at least one object or the sequence itself was disposed, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
-    /// <remarks>If <paramref name="includeSynchronous"/> is <see langword="true"/>, <see cref="IAsyncDisposable"/> is called befor <see cref="IDisposable"/>.</remarks>
-    public static async ValueTask<bool> DisposeAllAsync<T>(this IEnumerable<T> sequence, bool? includeSynchronous = true)
-    {
-        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
-
-        var disposed = false;
-
-        foreach (var item in sequence)
-        {
-            if (item is IAsyncDisposable disposable1)
-            {
-                await disposable1.DisposeAsync();
-                disposed = true;
-            }
-
-            if (item is IDisposable disposable2)
-            {
-                disposable2.Dispose();
-                disposed = true;
-            }
-        }
-
-        if (sequence is IAsyncDisposable disposable3)
-        {
-            await disposable3.DisposeAsync();
-            disposed = true;
-        }
-
-        if (sequence is IDisposable disposable4)
-        {
-            disposable4.Dispose();
-            disposed = true;
-        }
-
-        return disposed;
-    }
-
     private sealed class PeekedEnumerable<T>(
         IEnumerator<T> _enumerator,
         bool _hasFirstElement,
@@ -571,14 +576,13 @@ public static class EnumerableExtensions
 
         public bool MoveNext()
         {
-            if(_isFirstMove)
+            if (_isFirstMove)
             {
-                _isFirstMove = false;
-
                 if (_hasFirstElement)
                 {
                     Current = _firstElement;
                     _hasFirstElement = false;
+                    _isFirstMove = false;
                     return true;
                 }
                 else
@@ -611,5 +615,35 @@ public static class EnumerableExtensions
         public void Dispose() => _enumerator.Dispose();
 
         object? IEnumerator.Current => Current;
+    }
+
+    private sealed class AsyncEnumerableWrapper<T>(
+        IEnumerable<T> _sequence)
+        : IAsyncEnumerable<T>
+    {
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            return new AsyncEnumeratorWrapper<T>(_sequence.GetEnumerator(), cancellationToken);
+        }
+    }
+
+    private sealed class AsyncEnumeratorWrapper<T>(
+        IEnumerator<T> _enumerator,
+        CancellationToken _cancellationToken)
+        : IAsyncEnumerator<T>
+    {
+        public T Current => _enumerator.Current;
+
+        public ValueTask DisposeAsync()
+        {
+            _enumerator.Dispose();
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask<bool> MoveNextAsync()
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
+            return new ValueTask<bool>(_enumerator.MoveNext());
+        }
     }
 }

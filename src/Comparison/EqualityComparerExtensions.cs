@@ -115,7 +115,7 @@ public static class EqualityComparerExtensions
     /// Creates an <see cref="IEqualityComparer"/> that inverts the comparison of the specified comparer.
     /// </summary>
     /// <param name="comparer">The comparer whose equality comparison is to be inverted. Cannot be <see langword="null"/>.</param>
-    /// <returns>An <see cref="IEqualityComparer{T}"/> that inverts the equality comparison result of the specified <paramref name="comparer"/>.</returns>
+    /// <returns>An <see cref="IEqualityComparer"/> that inverts the equality comparison result of the specified <paramref name="comparer"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="comparer"/> is <see langword="null"/>.</exception>
     public static IEqualityComparer Invert(this IEqualityComparer comparer)
     {

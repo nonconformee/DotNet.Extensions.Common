@@ -119,8 +119,7 @@ public static class DictionaryExtensions
     /// <param name="key">The key whose associated value is to be retrieved or created. Cannot be <see langword="null"/>.</param>
     /// <param name="valueFactory">A function that generates a value for the specified key if the key does not exist in the dictionary. Cannot be <see langword="null"/>.</param>
     /// <returns>The value associated with the specified key if it exists, the newly created value otherwise.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="valueFactory"/> is <see
-    /// langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="valueFactory"/> is <see langword="null"/>.</exception>
     public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
     {
         if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
@@ -240,8 +239,7 @@ public static class DictionaryExtensions
     /// <param name="type">The type of the value to create and add to the dictionary if the key does not exist. This type must have a
     /// parameterless constructor.</param>
     /// <returns><see langword="true"/> if a new entry was added to the dictionary, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="type"/> is <see
-    /// langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/>, <paramref name="key"/>, or <paramref name="type"/> is <see langword="null"/>.</exception>
     public static bool AddIfNecessary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Type type)
     {
         if (dictionary is null) throw new ArgumentNullException(nameof(dictionary));
@@ -270,8 +268,7 @@ public static class DictionaryExtensions
     /// <param name="dictionary">The dictionary to which the entry will be added.</param>
     /// <param name="key">The key to check for existence in the dictionary.</param>
     /// <returns><see langword="true"/> if a new entry was added to the dictionary, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="key"/> is <see
-    /// langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> or <paramref name="key"/> is <see langword="null"/>.</exception>
     public static bool AddIfNecessary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
         => AddIfNecessary(dictionary, key, typeof(TValue));
 

@@ -51,10 +51,12 @@ public static class LinkedListExtensions
     /// <param name="node">The node after which the elements will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The elements to add. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/>, <paramref name="node"/>, or <paramref name="items"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The specified node does not belong to the provided linked list.</exception>"
     public static void AddAfterRange<T>(this LinkedList<T> list, LinkedListNode<T> node, IEnumerable<T> items)
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
         if (node is null) throw new ArgumentNullException(nameof(node));
+        if (node.List != list) throw new InvalidOperationException("The specified node does not belong to the provided linked list.");
         if (items is null) throw new ArgumentNullException(nameof(items));
 
         LinkedListNode<T> current = node;
@@ -73,6 +75,7 @@ public static class LinkedListExtensions
     /// <param name="node">The node after which the elements will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The elements to add. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/>, <paramref name="node"/>, or <paramref name="items"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The specified node does not belong to the provided linked list.</exception>"
     public static void AddAfterRange<T>(this LinkedList<T> list, LinkedListNode<T> node, params T[] items)
         => AddAfterRange(list, node, (IEnumerable<T>)items);
 
@@ -84,10 +87,12 @@ public static class LinkedListExtensions
     /// <param name="node">The node before which the elements will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The elements to add. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/>, <paramref name="node"/>, or <paramref name="items"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The specified node does not belong to the provided linked list.</exception>"
     public static void AddBeforeRange<T>(this LinkedList<T> list, LinkedListNode<T> node, IEnumerable<T> items)
     {
         if (list is null) throw new ArgumentNullException(nameof(list));
         if (node is null) throw new ArgumentNullException(nameof(node));
+        if (node.List != list) throw new InvalidOperationException("The specified node does not belong to the provided linked list.");
         if (items is null) throw new ArgumentNullException(nameof(items));
 
         var stack = new Stack<T>();
@@ -111,6 +116,7 @@ public static class LinkedListExtensions
     /// <param name="node">The node before which the elements will be added. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The elements to add. Cannot be <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="list"/>, <paramref name="node"/>, or <paramref name="items"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The specified node does not belong to the provided linked list.</exception>"
     public static void AddBeforeRange<T>(this LinkedList<T> list, LinkedListNode<T> node, params T[] items)
         => AddBeforeRange(list, node, (IEnumerable<T>)items);
 

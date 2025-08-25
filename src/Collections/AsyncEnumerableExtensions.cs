@@ -1,8 +1,10 @@
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using nonconformee.DotNet.Extensions.Async;
 using nonconformee.DotNet.Extensions.Randomizing;
 
 namespace nonconformee.DotNet.Extensions.Collections;
@@ -13,6 +15,40 @@ namespace nonconformee.DotNet.Extensions.Collections;
 public static class AsyncEnumerableExtensions
 {
     /// <summary>
+    /// Converts an asynchronous <see cref="IAsyncEnumerable{T}"/> sequence to a synchronous <see cref="IEnumerable{T}"/> sequence.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+    /// <param name="sequence">The sequence.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the enumeration.</param>
+    /// <returns>The <see cref="IEnumerable{T}"/> which synchronously iterates over <paramref name="sequence"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
+    public static IEnumerable<T> ToSyncEnumerable<T>(this IAsyncEnumerable<T> sequence, CancellationToken cancellationToken = default)
+    {
+        if (sequence is null) throw new ArgumentNullException(nameof(sequence));
+
+        var enumerator = sequence.GetAsyncEnumerator(cancellationToken);
+
+        try
+        {
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!enumerator.MoveNextAsync().GetAwaiter().GetResult())
+                {
+                    yield break;
+                }
+
+                yield return enumerator.Current;
+            }
+        }
+        finally
+        {
+            enumerator.DisposeAsync().GetAwaiter().GetResult();
+        }
+    }
+
+    /// <summary>
     /// Ensures that a sequence is never <see langword="null"/> by returning an empty sequence if the input is <see langword="null"/>.
     /// </summary>
     /// <remarks>This method is useful for avoiding null reference exceptions when working with asynchronous sequences.</remarks>
@@ -21,12 +57,6 @@ public static class AsyncEnumerableExtensions
     /// <returns>The original sequence if it is not <see langword="null"/>; otherwise, an empty sequence of type <typeparamref name="T"/>.</returns>
     public static IAsyncEnumerable<T> ToEmptyIfNull<T>(this IAsyncEnumerable<T>? sequence)
         => sequence ?? EmptyAsync<T>();
-
-    private static async IAsyncEnumerable<T> EmptyAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        await Task.CompletedTask;
-        yield break;
-    }
 
     /// <summary>
     /// Performs the specified action on each element of the sequence asynchronously.
@@ -244,7 +274,7 @@ public static class AsyncEnumerableExtensions
     /// <param name="sequence">The original sequence to filter. Cannot be <see langword="null"/>.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <param name="items">The items to exclude from the sequence. Cannot be <see langword="null"/>.</param>
-    /// <returns>An new sequence not containing the excluded elements.</returns>
+    /// <returns>A new sequence not containing the excluded elements.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static IAsyncEnumerable<T> ExcludeAsync<T>(this IAsyncEnumerable<T> sequence, CancellationToken cancellationToken = default, params T[] items)
         => sequence.ExcludeAsync((IEnumerable<T>)items, cancellationToken);
@@ -253,16 +283,17 @@ public static class AsyncEnumerableExtensions
     /// Combines two sequences into a single sequence by interleaving their elements in random order.
     /// </summary>
     /// <remarks>
-    /// Because <paramref name="sequence"/> and <paramref name="items"/> are asynchronous sequences, the number of elements is not known for either of them.
+    /// Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
     /// Therefore, the resulting sequence returns elements with a chance of 50% from either of those, until the first sequence is finished, where the remaining elements of the other sequence are returned as they are enumerated in the corresponding sequence.
     /// This means, that the end of the returned sequence might not have mixed elements, depending on the length difference of <paramref name="sequence"/> and <paramref name="items"/>.
+    /// But eventually, all elements of both sequences will be returned.
     /// </remarks>
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
     /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="items">The secondary sequence to be mixed. Cannot be <see langword="null"/>.</param>
     /// <param name="random">An optional <see cref="Random"/> instance used to determine the interleaving order. If <see langword="null"/>, a new instance of <see cref="Random"/> is created.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>An <see cref="IAsyncEnumerable{T}"/> that yields elements from both <paramref name="sequence"/> and <paramref name="items"/> in random order until both sequences are fully enumerated.</returns>
+    /// <returns>A <see cref="IAsyncEnumerable{T}"/> that yields elements from both <paramref name="sequence"/> and <paramref name="items"/> in random order until both sequences are fully enumerated.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="items"/> is <see langword="null"/>.</exception>
     public static async IAsyncEnumerable<T> MixAsync<T>(this IAsyncEnumerable<T> sequence, IAsyncEnumerable<T> items, Random? random = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -294,7 +325,7 @@ public static class AsyncEnumerableExtensions
 
                 if (useEnum1)
                 {
-                    if (await enum1.MoveNextAsync())
+                    if (await enum1.MoveNextAsync().ConfigureAwait(false))
                     {
                         yield return enum1.Current;
                     }
@@ -308,7 +339,7 @@ public static class AsyncEnumerableExtensions
 
                 if (useEnum2)
                 {
-                    if (await enum2.MoveNextAsync())
+                    if (await enum2.MoveNextAsync().ConfigureAwait(false))
                     {
                         yield return enum2.Current;
                     }
@@ -323,8 +354,8 @@ public static class AsyncEnumerableExtensions
         }
         finally
         {
-            if (enum1 != null) await enum1.DisposeAsync();
-            if (enum2 != null) await enum2.DisposeAsync();
+            if (enum1 != null) await enum1.DisposeAsync().ConfigureAwait(false);
+            if (enum2 != null) await enum2.DisposeAsync().ConfigureAwait(false);
         }
     }
 
@@ -332,7 +363,10 @@ public static class AsyncEnumerableExtensions
     /// Combines a sequence with items into a single sequence by interleaving their elements in random order.
     /// </summary>
     /// <remarks>
-    /// This is a convenience method that converts the array to an async enumerable before mixing.
+    /// Because <paramref name="sequence"/> and <paramref name="items"/> are sequences, the number of elements is not known for either of them.
+    /// Therefore, the resulting sequence returns elements with a chance of 50% from either of those, until the first sequence is finished, where the remaining elements of the other sequence are returned as they are enumerated in the corresponding sequence.
+    /// This means, that the end of the returned sequence might not have mixed elements, depending on the length difference of <paramref name="sequence"/> and <paramref name="items"/>.
+    /// But eventually, all elements of both sequences will be returned.
     /// </remarks>
     /// <typeparam name="T">The type of elements in the sequences.</typeparam>
     /// <param name="sequence">The primary sequence to be mixed. Cannot be <see langword="null"/>.</param>
@@ -362,7 +396,7 @@ public static class AsyncEnumerableExtensions
         if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than zero.");
 
         var batch = new List<T>(batchSize);
-
+        
         await foreach (var item in sequence.WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -385,7 +419,6 @@ public static class AsyncEnumerableExtensions
     /// <summary>
     /// Returns distinct elements from a sequence.
     /// </summary>
-    /// <remarks>This method is useful for finding unique elements in an asynchronous sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
     /// <param name="equalityComparer">An optional equality comparer to compare elements. If <see langword="null"/>, the default equality comparer is used.</param>
@@ -412,7 +445,6 @@ public static class AsyncEnumerableExtensions
     /// <summary>
     /// Returns distinct elements from a sequence according to a specified key selector.
     /// </summary>
-    /// <remarks>This method is useful for finding unique elements based on a specific property or key in an asynchronous sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of key to distinguish elements.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
@@ -442,7 +474,6 @@ public static class AsyncEnumerableExtensions
     /// <summary>
     /// Returns distinct elements from a sequence according to a specified key selector.
     /// </summary>
-    /// <remarks>This method is useful for finding unique elements based on a specific property or key in an asynchronous sequence.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of key to distinguish elements.</typeparam>
     /// <param name="source">The sequence to filter for distinct elements. Cannot be <see langword="null"/>.</param>
@@ -462,7 +493,7 @@ public static class AsyncEnumerableExtensions
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (seenKeys.Add(await keySelector(element, cancellationToken)))
+            if (seenKeys.Add(await keySelector(element, cancellationToken).ConfigureAwait(false)))
             {
                 yield return element;
             }
@@ -479,7 +510,7 @@ public static class AsyncEnumerableExtensions
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence to peek into. Cannot be <see langword="null"/>.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>An enumerable that iterates over the original sequence, starting from the first element.</returns>
+    /// <returns>A tuple which contains the sequence to start/continue enumeration (<c>Sequence</c>) and the first element (<c>FirstElement</c>, can be <see langword="null"/>).</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
     public static async Task<(IAsyncEnumerable<T> Sequence, T? FirstElement)> PeekAsync<T>(this IAsyncEnumerable<T> sequence, CancellationToken cancellationToken = default)
     {
@@ -489,7 +520,7 @@ public static class AsyncEnumerableExtensions
         bool hasFirstElement = false;
         
         await using var enumerator = sequence.GetAsyncEnumerator(cancellationToken);
-        hasFirstElement = await enumerator.MoveNextAsync();
+        hasFirstElement = await enumerator.MoveNextAsync().ConfigureAwait(false);
         
         if (hasFirstElement)
         {
@@ -502,13 +533,16 @@ public static class AsyncEnumerableExtensions
     /// <summary>
     /// Returns the minimum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
     /// </summary>
-    /// <remarks>This method is useful for finding the "smallest" element in an asynchronous sequence based on a specific criterion.</remarks>
+    /// <remarks>
+    /// This method is useful for finding the smallest element in a sequence based on a specific criterion.
+    /// Elements which are <see langword="null"/> are ignored.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of the selector.</typeparam>
     /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
     /// <param name="selector">The function which selects the value of an item which is then used for comparison. Cannot be <see langword="null"/>.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>The minimum element or <see langword="null"/> if the sequence is empty.</returns>
+    /// <returns>The minimum element or the default value of <typeparamref name="T"/> if the sequence is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="selector"/> is <see langword="null"/>.</exception>
     public static async ValueTask<T?> MinByOrDefaultAsync<T, TKey>(this IAsyncEnumerable<T> sequence, Func<T, TKey> selector, CancellationToken cancellationToken = default)
         where TKey : IComparable<TKey>
@@ -540,13 +574,16 @@ public static class AsyncEnumerableExtensions
     /// <summary>
     /// Returns the maximum element in a sequence according to a specified key selector, or <see langword="null"/> if the sequence is empty.
     /// </summary>
-    /// <remarks>This method is useful for finding the "largest" element in an asynchronous sequence based on a specific criterion.</remarks>
+    /// <remarks>
+    /// This method is useful for finding the largest element in a sequence based on a specific criterion.
+    /// Elements which are <see langword="null"/> are ignored.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <typeparam name="TKey">The type of the selector.</typeparam>
     /// <param name="sequence">The sequence. Cannot be <see langword="null"/>.</param>
     /// <param name="selector">The function which selects the value of an item which is then used for comparison. Cannot be <see langword="null"/>.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>The maximum element or <see langword="null"/> if the sequence is empty.</returns>
+    /// <returns>The maximum element or the default value of <typeparamref name="T"/> if the sequence is empty.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> or <paramref name="selector"/> is <see langword="null"/>.</exception>
     public static async ValueTask<T?> MaxByOrDefaultAsync<T, TKey>(this IAsyncEnumerable<T> sequence, Func<T, TKey> selector, CancellationToken cancellationToken = default)
         where TKey : IComparable<TKey>
@@ -576,15 +613,17 @@ public static class AsyncEnumerableExtensions
     }
 
     /// <summary>
-    /// Disposes all <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/> objects within the sequence.
+    /// Disposes all <see cref="IAsyncDisposable"/> objects within the sequence and optionally the sequence implementation itself if it implements <see cref="IAsyncDisposable"/>.
     /// </summary>
-    /// <remarks>This method is useful for cleaning up resources held by objects in an asynchronous sequence.</remarks>
+    /// <remarks>If <paramref name="includeSynchronous"/> is <see langword="true"/>, <see cref="IAsyncDisposable.DisposeAsync"/> is called before <see cref="IDisposable.Dispose"/>.</remarks>
     /// <typeparam name="T">The type of elements in the sequence.</typeparam>
     /// <param name="sequence">The sequence of objects to dispose. Cannot be <see langword="null"/>.</param>
+    /// <param name="includeSynchronous"><see langword="true"/> if synchronous dispose (<see cref="IDisposable"/>) shall also be called (same as calling <see cref="EnumerableExtensions.DisposeAll{T}(IEnumerable{T})"/>), <see langword="false"/> if only <see cref="IAsyncDisposable"/> shall be called. Default value is <see langword="true"/>.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns><see langword="true"/> if at least one object was disposed, <see langword="false"/> otherwise.</returns>
+    /// <returns><see langword="true"/> if at least one object or the sequence itself was disposed, <see langword="false"/> otherwise.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sequence"/> is <see langword="null"/>.</exception>
-    public static async ValueTask<bool> DisposeAllAsync<T>(this IAsyncEnumerable<T> sequence, CancellationToken cancellationToken = default)
+    /// <remarks>If <paramref name="includeSynchronous"/> is <see langword="true"/>, <see cref="IAsyncDisposable"/> is called befor <see cref="IDisposable"/>.</remarks>
+    public static async ValueTask<bool> DisposeAllAsync<T>(this IAsyncEnumerable<T> sequence, bool includeSynchronous = true, CancellationToken cancellationToken = default)
     {
         if (sequence is null) throw new ArgumentNullException(nameof(sequence));
 
@@ -594,37 +633,38 @@ public static class AsyncEnumerableExtensions
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (item is IAsyncDisposable asyncDisposable)
+            if (item is IAsyncDisposable disposable1)
             {
-                await asyncDisposable.DisposeAsync();
+                await disposable1.DisposeAsync().ConfigureAwait(false);
                 disposed = true;
             }
-            else if (item is IDisposable disposable)
+
+            if (includeSynchronous && item is IDisposable disposable2)
             {
-                disposable.Dispose();
+                disposable2.Dispose();
                 disposed = true;
             }
+        }
+
+        if (sequence is IAsyncDisposable disposable3)
+        {
+            await disposable3.DisposeAsync().ConfigureAwait(false);
+            disposed = true;
+        }
+
+        if (includeSynchronous && sequence is IDisposable disposable4)
+        {
+            disposable4.Dispose();
+            disposed = true;
         }
 
         return disposed;
     }
-
-    private static IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
+    
+    private static async IAsyncEnumerable<T> EmptyAsync<T>()
     {
-        return new EnumerableAsyncWrapper<T>(source);
-    }
-
-    private sealed class EnumerableAsyncWrapper<T>(IEnumerable<T> source) : IAsyncEnumerable<T>
-    {
-        public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            await Task.CompletedTask;
-            foreach (var item in source)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                yield return item;
-            }
-        }
+        await Task.CompletedTask;
+        yield break;
     }
 
     private sealed class PeekedAsyncEnumerable<T>(
@@ -661,24 +701,28 @@ public static class AsyncEnumerableExtensions
             
             if (_isFirstMove)
             {
-                _isFirstMove = false;
-
                 if (_hasFirstElement)
                 {
                     Current = _firstElement!;
+                    _hasFirstElement = false;
+                    _isFirstMove = false;
                     return true;
                 }
-                
-                return false;
+                else
+                {
+                    return false;
+                }
             }
             
-            if (await _enumerator.MoveNextAsync())
+            if (await _enumerator.MoveNextAsync().ConfigureAwait(false))
             {
                 Current = _enumerator.Current;
                 return true;
             }
-            
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         public ValueTask DisposeAsync() => _enumerator.DisposeAsync();

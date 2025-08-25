@@ -1,7 +1,4 @@
-﻿
-using nonconformee.DotNet.Extensions.Exceptions;
-using System.Collections;
-using System.Collections.ObjectModel;
+﻿using System.Collections;
 
 namespace nonconformee.DotNet.Extensions.Collections;
 
@@ -247,7 +244,7 @@ public static class CollectionExtensions
     /// <param name="collection">The collection. Cannot be <see langword="null"/></param>
     /// <param name="item">The item to remove. Can be <see langword="null"/></param>
     /// <returns>The number of items removed.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is Can be <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is<see langword="null"/>.</exception>
     public static int RemoveAll<T>(this ICollection<T> collection, T item)
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
@@ -487,7 +484,7 @@ public static class CollectionExtensions
                     continue;
                 }
 
-                added += collection.AddFlattened(item);
+                added += collection.AddFlattened(item, addPredicate);
             }
 
             return added;
@@ -533,6 +530,11 @@ public static class CollectionExtensions
 
         var index = (randomizer ?? new Random()).Next(0, collection.Count);
 
+        if(collection is IList<T> list)
+        {
+            return list[index];
+        }
+
         return collection.Skip(index).FirstOrDefault();
     }
 
@@ -554,7 +556,16 @@ public static class CollectionExtensions
         }
 
         var index = (randomizer ?? new Random()).Next(0, collection.Count);
-        var value = collection.Skip(index).FirstOrDefault();
+        T? value;
+
+        if(collection is IList<T> list)
+        {
+            value = list[index];
+            list.RemoveAt(index);
+            return value;
+        }
+
+        value = collection.Skip(index).FirstOrDefault();
 
         if(value is not null)
         {
@@ -567,7 +578,9 @@ public static class CollectionExtensions
     /// <summary>
     /// Divides the elements of the specified collection into smaller lists of a given size.
     /// </summary>
-    /// <remarks>This method is useful for breaking a large collection into smaller, more manageable pieces.</remarks>
+    /// <remarks>
+    /// If <paramref name="sliceSize"/> is greater than the number of elements in <paramref name="collection"/>, a single slice containing all elements is returned.
+    /// </remarks>
     /// <typeparam name="T">The type of elements in the collection.</typeparam>
     /// <param name="collection">The collection to be divided. Cannot be <see langword="null"/>.</param>
     /// <param name="sliceSize">The maximum number of elements in each sublist. Must be greater than or equal to 1.</param>
@@ -580,7 +593,6 @@ public static class CollectionExtensions
     {
         if (collection is null) throw new ArgumentNullException(nameof(collection));
         if (sliceSize <= 0) throw new ArgumentOutOfRangeException(nameof(sliceSize), "Slice size must be greater than or equal to 1.");
-        if (sliceSize > collection.Count) throw new ArgumentOutOfRangeException(nameof(sliceSize), "Slice size must be less than or equal to the collection size.");
 
         var result = new List<List<T>>();
         var slice = new List<T>();
@@ -591,14 +603,14 @@ public static class CollectionExtensions
 
             if (slice.Count >= sliceSize)
             {
-                result.Add([.. slice]);
+                result.Add(new List<T>(slice));
                 slice.Clear();
             }
         }
 
         if (slice.Count > 0)
         {
-            result.Add([.. slice]);
+            result.Add(new List<T>(slice));
         }
 
         return result;
@@ -627,19 +639,42 @@ public static class CollectionExtensions
             {
                 if (slice.Count > 0)
                 {
-                    result.AddRange(slice);
+                    result.Add(new List<T>(slice));
                     slice.Clear();
                 }
             }
 
             slice.Add(item);
         }
+
         if (slice.Count > 0)
         {
-            result.AddRange(slice);
+            result.Add(new List<T>(slice));
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Creates a composite comparer that performs a secondary comparison using the specified key selector when theprimary comparer results in equality.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
+    /// <typeparam name="TKey">The type of the key returned by the key selector function. Must be non-nullable.</typeparam>
+    /// <param name="comparer">The primary comparer.</param>
+    /// <param name="keySelector">A function to extract the key for each element.</param>
+    /// <param name="keyComparer">An optional equality comparer to use for comparing keys. If <see langword="null"/>, the default equality comparer for type <typeparamref name="TKey"/> is used.</param>
+    /// <returns>A composite comparer that can be used to compare elements based on the specified criteria.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="comparer"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><typeparamref name="TKey"/> is not a non-nullable type.</exception>"
+    public static IComparer<T> ThenBy<T, TKey>(this IComparer<T> comparer, Func<T, TKey> keySelector, IComparer<TKey>? keyComparer = null)
+        where TKey : notnull
+    {
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+        if (keySelector is null) throw new ArgumentNullException(nameof(keySelector));
+
+        keyComparer ??= Comparer<TKey>.Default;
+
+        return new CompositeComparer<T, TKey>(comparer, keySelector, keyComparer);
     }
 
     /// <summary>
