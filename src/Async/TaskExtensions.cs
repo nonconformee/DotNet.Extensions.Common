@@ -613,4 +613,28 @@ public static class TaskExtensions
 
         return tcs.Task;
     }
+
+    public static bool IsTaskOf(this Type type, Type resultType)
+    {
+        if (type is null) throw new ArgumentNullException(nameof(type));
+        if (resultType is null) throw new ArgumentNullException(nameof(resultType));
+
+        return type.IsGenericType
+            && type.GetGenericTypeDefinition() == typeof(Task<>)
+            && type.GetGenericArguments()[0] == resultType;
+    }
+
+    public static bool IsTaskOf<T>(this Type type) => type.IsTaskOf(typeof(T));
+
+    public static bool IsValueTaskOf(this Type type, Type resultType)
+    {
+        if (type is null) throw new ArgumentNullException(nameof(type));
+        if (resultType is null) throw new ArgumentNullException(nameof(resultType));
+
+        return type.IsGenericType
+            && type.GetGenericTypeDefinition() == typeof(ValueTask<>)
+            && type.GetGenericArguments()[0] == resultType;
+    }
+
+    public static bool IsValueTaskOf<T>(this Type type) => type.IsValueTaskOf(typeof(T));
 }

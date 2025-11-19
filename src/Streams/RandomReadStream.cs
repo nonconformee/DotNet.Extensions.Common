@@ -17,14 +17,26 @@ namespace nonconformee.DotNet.Extensions.Streams;
 public sealed class RandomReadStream : Stream
 {
     private readonly object _sync = new();
+    private readonly byte _min;
+    private readonly byte _max;
     private readonly Random _random;
+    private long? _length;
+    private long? _offset;
 
     /// <summary>
-    /// Creates a new instance.
+    /// Initializes a new instance of the <see cref="RandomReadStream"/> class, which generates a stream of random bytes within a specified range.
     /// </summary>
-    /// <param name="random">Optional randomizer. If <see langword="null"/> or not provided, a new instance is created.</param>
-    public RandomReadStream(Random? random = null)
+    /// <param name="length">The total number of bytes the stream will generate. If <see langword="null"/>, the stream is infinite.</param>
+    /// <param name="min">The inclusive lower bound of the random byte values. Defaults to 0.</param>
+    /// <param name="max">The inclusive upper bound of the random byte values. Defaults to 255.</param>
+    /// <param name="random">An optional <see cref="Random"/> instance to use for generating random values. If <see langword="null"/>, a new
+    /// instance is created.</param>
+    public RandomReadStream(long? length = null, byte min = 0, byte max = 255, Random? random = null)
     {
+        _length = length;
+        _offset = length is null ? null : 0;
+        _min = min;
+        _max = max;
         _random = random ?? new Random();
     }
 
@@ -32,21 +44,23 @@ public sealed class RandomReadStream : Stream
     public override bool CanRead => true;
 
     /// <inheritdoc cref="Stream.CanSeek"/>
-    public override bool CanSeek => false;
+    public override bool CanSeek => _length is not null;
 
     /// <inheritdoc cref="Stream.CanWrite"/>
     public override bool CanWrite => false;
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
-    public override long Length => throw new NotSupportedException("This stream has no defined length.");
+    /// <inheritdoc cref="Stream.Length"/>
+    public override long Length => _length ?? throw new NotSupportedException("Length is not supported.");
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <inheritdoc cref="Stream.Position"/>
     public override long Position
     {
-        get => throw new NotSupportedException("This stream does not support seeking or position.");
-        set => throw new NotSupportedException("This stream does not support seeking or position.");
+        get => _offset ?? throw new NotSupportedException("Seeking or position is not supported.");
+        set
+        {
+            if (_length is null) throw new NotSupportedException("Seeking or position is not supported.");
+            _offset = value;
+        }
     }
 
     /// <inheritdoc cref="Stream.Flush"/>
@@ -71,7 +85,10 @@ public sealed class RandomReadStream : Stream
     /// <inheritdoc cref="Stream.Read(Span{byte})"/>
     public override int Read(Span<byte> buffer)
     {
-        if (buffer.Length == 0) return 0;
+        if (buffer.Length == 0)
+        {
+            return 0;
+        }
 
         FillRandom(buffer);
         return buffer.Length;
@@ -82,7 +99,10 @@ public sealed class RandomReadStream : Stream
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (buffer.Length == 0) return ValueTask.FromResult(0);
+        if (buffer.Length == 0)
+        {
+            return ValueTask.FromResult(0);
+        }
 
         FillRandom(buffer.Span);
         return ValueTask.FromResult(buffer.Length);
@@ -92,18 +112,59 @@ public sealed class RandomReadStream : Stream
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (count == 0)
+        {
+            return Task.FromResult(0);
+        }
+
         return Task.FromResult(Read(buffer, offset, count));
     }
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <inheritdoc cref="Stream.Seek(long, SeekOrigin)"/>
     public override long Seek(long offset, SeekOrigin origin)
-        => throw new NotSupportedException("Seeking is not supported.");
+    {
+        if (_length is null) throw new NotSupportedException("Seeking or position is not supported.");
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+        switch (origin)
+        {
+            case SeekOrigin.Begin:
+                if(offset < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
+                if (offset > _length) throw new IOException("Attempted to seek beyond the end of the stream.");
+                _offset = offset;
+                break;
+
+            case SeekOrigin.Current:
+                if (_offset! + offset < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
+                if (_offset + offset > _length) throw new IOException("Attempted to seek beyond the end of the stream.");
+                _offset += offset;
+                break;
+
+            case SeekOrigin.End:
+                if (offset > 0) throw new IOException("Attempted to seek beyond the end of the stream.");
+                if (_length + offset < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
+                _offset = _length + offset;
+                break;
+
+            default:
+                throw new ArgumentException("Invalid origin.", nameof(origin));
+        }
+
+        return _offset!.Value;
+    }
+
+    /// <inheritdoc cref="Stream.SetLength(long)"/>
     public override void SetLength(long value)
-        => throw new NotSupportedException("Setting length is not supported.");
+    {
+        if (_length is null) throw new NotSupportedException("Length is not supported.");
+
+        _length = value;
+
+        if (_offset > value)
+        {
+            _offset = value;
+        }
+    }
 
     /// <summary>Not supported.</summary>
     /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
