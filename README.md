@@ -1,3 +1,3 @@
 # DotNet.Extensions
 
-Little extensions and helpers for.NET
+Common extensions and helpers for .NET
