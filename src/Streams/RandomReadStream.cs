@@ -20,21 +20,22 @@ public sealed class RandomReadStream : Stream
     private readonly byte _min;
     private readonly byte _max;
     private readonly Random _random;
+
     private long? _length;
     private long? _offset;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RandomReadStream"/> class, which generates a stream of random bytes within a specified range.
+    /// Creates a new instance of <see cref="RandomReadStream"/>.
     /// </summary>
-    /// <param name="length">The total number of bytes the stream will generate. If <see langword="null"/>, the stream is infinite.</param>
-    /// <param name="min">The inclusive lower bound of the random byte values. Defaults to 0.</param>
-    /// <param name="max">The inclusive upper bound of the random byte values. Defaults to 255.</param>
-    /// <param name="random">An optional <see cref="Random"/> instance to use for generating random values. If <see langword="null"/>, a new
-    /// instance is created.</param>
+    /// <param name="length">The total number of bytes the stream will generate. If <see langword="null"/>, the stream is infinite. Default value is <see langword="null"/>.</param>
+    /// <param name="min">The inclusive lower bound of the random byte values. Default value is 0.</param>
+    /// <param name="max">The inclusive upper bound of the random byte values. Default value is 255.</param>
+    /// <param name="random">An optional <see cref="Random"/> instance to use for generating the random values. If <see langword="null"/>, a new instance is created. Default value is <see langword="null"/>.</param>
     public RandomReadStream(long? length = null, byte min = 0, byte max = 255, Random? random = null)
     {
         _length = length;
         _offset = length is null ? null : 0;
+
         _min = min;
         _max = max;
         _random = random ?? new Random();
@@ -58,8 +59,14 @@ public sealed class RandomReadStream : Stream
         get => _offset ?? throw new NotSupportedException("Seeking or position is not supported.");
         set
         {
-            if (_length is null) throw new NotSupportedException("Seeking or position is not supported.");
+            if (_offset is null) throw new NotSupportedException("Seeking or position is not supported.");
+
             _offset = value;
+
+            if (_length <= value)
+            {
+                _length = value + 1;
+            }
         }
     }
 
@@ -124,7 +131,7 @@ public sealed class RandomReadStream : Stream
     /// <inheritdoc cref="Stream.Seek(long, SeekOrigin)"/>
     public override long Seek(long offset, SeekOrigin origin)
     {
-        if (_length is null) throw new NotSupportedException("Seeking or position is not supported.");
+        if (_offset is null) throw new NotSupportedException("Seeking or position is not supported.");
 
         switch (origin)
         {
@@ -150,6 +157,11 @@ public sealed class RandomReadStream : Stream
                 throw new ArgumentException("Invalid origin.", nameof(origin));
         }
 
+        if (_length <= _offset)
+        {
+            _length = _offset + 1;
+        }
+
         return _offset!.Value;
     }
 
@@ -166,34 +178,53 @@ public sealed class RandomReadStream : Stream
         }
     }
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
     public override void Write(byte[] buffer, int offset, int count)
-        => throw new NotSupportedException("Writing is not supported.");
+        => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
     public override void Write(ReadOnlySpan<byte> buffer)
-        => throw new NotSupportedException("Writing is not supported.");
+        => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        => Task.FromException(new NotSupportedException("Writing is not supported."));
+        => Task.FromException(new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}."));
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
     public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-        => ValueTask.FromException(new NotSupportedException("Writing is not supported."));
+        => ValueTask.FromException(new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}."));
 
-    /// <summary>Not supported.</summary>
-    /// <exception cref="NotSupportedException">Not supported by this <see cref="Stream"/> implementation.</exception>
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
     public override void WriteByte(byte value)
-        => throw new NotSupportedException("Writing is not supported.");
+        => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
+    public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+        => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
+    public override void EndWrite(IAsyncResult asyncResult)
+        => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+
+    /// <summary>Writing is not supported.</summary>
+    /// <exception cref="NotSupportedException">Writing is not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
+    public override int WriteTimeout
+    {
+        get => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+        set => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+    }
 
     /// <inheritdoc cref="Stream.DisposeAsync()"/>
     public override ValueTask DisposeAsync() => base.DisposeAsync();
 
+    /// <inheritdoc cref="Stream.Dispose(bool)"/>
     protected override void Dispose(bool disposing) => base.Dispose(disposing);
 
     private void FillRandom(byte[] buffer, int offset, int count)
