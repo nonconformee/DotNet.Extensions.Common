@@ -1,18 +1,21 @@
 
+using System.Drawing;
+
 namespace nonconformee.DotNet.Extensions.Streams;
 
 /// <summary>
 /// A read-only <see cref="Stream"/> that produces random bytes.
 /// </summary>
 /// <remarks>
-/// Characteristics:
-/// - Readable: <see cref="CanRead"/> is <c>true</c>.
-/// - Not seekable: <see cref="CanSeek"/> is <c>false</c>; <see cref="Length"/> and <see cref="Position"/> are unsupported.
-/// - Not writable: <see cref="CanWrite"/> is <c>false</c>.
-/// - Endless: every read request (with a positive count) is fully satisfied; the stream never reports end-of-stream.
-/// - Backed by a provided <see cref="Random"/> instance or a lazily created one.
-/// - <see cref="Flush"/> and <see cref="FlushAsync(CancellationToken)"/> have no effect.
-/// - <see cref="IDisposable.Dispose"/> and <see cref="IAsyncDisposable.DisposeAsync"/> have no effect.
+/// Reading: The stream can be read; <see cref="CanRead"/> is always <see langword="true"/>.
+/// Seeking: The stream can be seeked if a length is specified upon construction (see <see cref="RandomReadStream(long?, byte, byte, Random?)"/>); <see cref="CanSeek"/> is <see langword="true"/> if a length is specified, <see langword="false"/> otherwise.
+/// Writing: The stream cannot be written to; <see cref="CanWrite"/> is always <see langword="false"/>. Any attempt to write to the stream (accessing or calling any member which has the word <c>Write</c> in it...) will throw a <see cref="NotSupportedException"/>.
+/// Timeouts: The stream does not support timeouts; <see cref="CanTimeout"/> is always <see langword="false"/>.
+/// Length: If a length is specified upon construction (see <see cref="RandomReadStream(long?, byte, byte, Random?)"/>), the stream has that length; otherwise, accessing <see cref="Length"/> or calling <see cref="SetLength(long)"/> throws <see cref="NotSupportedException"/>. The length can be changed via <see cref="SetLength(long)"/> if a length was specified upon construction. If the current position is beyond the new length, it is adjusted to be equal to the new length.
+/// Position: If a length is specified upon construction (see <see cref="RandomReadStream(long?, byte, byte, Random?)"/>), the stream maintains a position; otherwise, accessing <see cref="Position"/> or calling <see cref="Seek(long, SeekOrigin)"/> throws <see cref="NotSupportedException"/>. The position can be changed via <see cref="Position"/> or <see cref="Seek(long, SeekOrigin)"/> if a length was specified upon construction. If the position is set beyond the length of the stream, the streams length will become equal to the new position.
+/// Flushing: <see cref="Flush"/> and <see cref="FlushAsync(CancellationToken)"/> have no effect.
+/// Closing/Disposing: <see cref="Stream.Close"/>, <see cref="IDisposable.Dispose"/> and <see cref="IAsyncDisposable.DisposeAsync"/> have no effect.
+/// Async: All operations are synchronous, asynchronous methods are implemented by calling their synchronous counterparts.
 /// </remarks>
 public sealed class RandomReadStream : Stream
 {
@@ -50,24 +53,20 @@ public sealed class RandomReadStream : Stream
     /// <inheritdoc cref="Stream.CanWrite"/>
     public override bool CanWrite => false;
 
+    /// <inheritdoc cref="Stream.CanTimeout"/>
+    public override bool CanTimeout => false;
+
     /// <inheritdoc cref="Stream.Length"/>
-    public override long Length => _length ?? throw new NotSupportedException("Length is not supported.");
+    public override long Length
+    {
+        get => _length ?? throw new NotSupportedException("Length is not supported.");
+    }
 
     /// <inheritdoc cref="Stream.Position"/>
     public override long Position
     {
         get => _offset ?? throw new NotSupportedException("Seeking or position is not supported.");
-        set
-        {
-            if (_offset is null) throw new NotSupportedException("Seeking or position is not supported.");
-
-            _offset = value;
-
-            if (_length <= value)
-            {
-                _length = value + 1;
-            }
-        }
+        set => Seek(value, SeekOrigin.Begin);
     }
 
     /// <inheritdoc cref="Stream.Flush"/>
@@ -80,7 +79,7 @@ public sealed class RandomReadStream : Stream
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (buffer is null) throw new ArgumentNullException(nameof(buffer));
-        if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+        if (offset < 0 || offset >= buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
         if (count < 0 || (offset + count) > buffer.Length) throw new ArgumentOutOfRangeException(nameof(count));
 
         if (count == 0) return 0;
@@ -92,27 +91,10 @@ public sealed class RandomReadStream : Stream
     /// <inheritdoc cref="Stream.Read(Span{byte})"/>
     public override int Read(Span<byte> buffer)
     {
-        if (buffer.Length == 0)
-        {
-            return 0;
-        }
+        if (buffer.Length == 0) return 0;
 
         FillRandom(buffer);
         return buffer.Length;
-    }
-
-    /// <inheritdoc cref="Stream.ReadAsync(Memory{byte},CancellationToken)"/>
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (buffer.Length == 0)
-        {
-            return ValueTask.FromResult(0);
-        }
-
-        FillRandom(buffer.Span);
-        return ValueTask.FromResult(buffer.Length);
     }
 
     /// <inheritdoc cref="Stream.ReadAsync(byte[],int,int,CancellationToken)"/>
@@ -120,12 +102,19 @@ public sealed class RandomReadStream : Stream
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (count == 0)
-        {
-            return Task.FromResult(0);
-        }
+        if (count == 0) return Task.FromResult(0);
 
         return Task.FromResult(Read(buffer, offset, count));
+    }
+
+    /// <inheritdoc cref="Stream.ReadAsync(Memory{byte},CancellationToken)"/>
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (buffer.Length == 0) return ValueTask.FromResult(0);
+
+        return ValueTask.FromResult(Read(buffer.Span));
     }
 
     /// <inheritdoc cref="Stream.Seek(long, SeekOrigin)"/>
@@ -137,29 +126,26 @@ public sealed class RandomReadStream : Stream
         {
             case SeekOrigin.Begin:
                 if(offset < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
-                if (offset > _length) throw new IOException("Attempted to seek beyond the end of the stream.");
                 _offset = offset;
                 break;
 
             case SeekOrigin.Current:
-                if (_offset! + offset < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
-                if (_offset + offset > _length) throw new IOException("Attempted to seek beyond the end of the stream.");
+                if ((_offset! + offset) < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
                 _offset += offset;
                 break;
 
             case SeekOrigin.End:
-                if (offset > 0) throw new IOException("Attempted to seek beyond the end of the stream.");
-                if (_length + offset < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
-                _offset = _length + offset;
+                if ((_length! - 1 + offset) < 0) throw new IOException("Attempted to seek before the beginning of the stream.");
+                _offset = _length! - 1 + offset;
                 break;
 
             default:
                 throw new ArgumentException("Invalid origin.", nameof(origin));
         }
 
-        if (_length <= _offset)
+        if (_length < _offset)
         {
-            _length = _offset + 1;
+            _length = _offset;
         }
 
         return _offset!.Value;
@@ -172,9 +158,9 @@ public sealed class RandomReadStream : Stream
 
         _length = value;
 
-        if (_offset > value)
+        if (_offset > _length)
         {
-            _offset = value;
+            _offset = _length;
         }
     }
 
@@ -219,6 +205,14 @@ public sealed class RandomReadStream : Stream
     {
         get => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
         set => throw new NotSupportedException($"Writing is not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+    }
+
+    /// <summary>Timeouts are not supported.</summary>
+    /// <exception cref="NotSupportedException">Timeouts are not supported by the <see cref="Stream"/> implementation of <see cref="RandomReadStream"/>.</exception>
+    public override int ReadTimeout
+    {
+        get => throw new NotSupportedException($"Timeouts are not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
+        set => throw new NotSupportedException($"Timeouts are not supported by the {nameof(Stream)} implementation of {nameof(RandomReadStream)}.");
     }
 
     /// <inheritdoc cref="Stream.DisposeAsync()"/>
